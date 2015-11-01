@@ -1,0 +1,22 @@
+.full-height {
+    min-height: 100%;
+    height: 100%;
+}
+
+.scrollable-x {
+    overflow-x: auto;
+}
+
+.scrollable-y {
+    overflow-y: auto;
+}
+
+table#timetable thead,
+table#timetable tbody tr td:first-child {
+    background-color: #efefef;
+    cursor: default;
+}
+
+table#timetable tbody {
+    cursor: pointer;
+}
