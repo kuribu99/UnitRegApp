@@ -1,5 +1,8 @@
 var app = angular.module("unitRegApp", []);
 
+// Constants
+
+// DayInWeek
 const DayInWeek = [
     'Monday',
     'Tuesday',
@@ -9,22 +12,37 @@ const DayInWeek = [
     'Saturday',
     'Sunday'
 ];
+const Monday = 0;
+const Tuesday = 1;
+const Wednesday = 2;
+const Thursday = 3;
+const Friday = 4;
+const Saturday = 5;
+const Sunday = 6;
 
 const ClassType = [
     'Lecture', 'Tutorial', 'Practical', 'Other'
 ];
+const Lecture = 0;
+const Tutorial = 1;
+const Practical = 2;
+const Other = 3;
 
+// Controller
 app.controller("unitRegController", function($scope) {
 
     $scope.timetable = new Timetable();
 
     var web = new Subject(timetable, 'UECS2014', 'Web Application Development');
-    web.AddTimeslot(new Timeslot(DayInWeek[0], new Time(900), new Time(1100), web, ClassType[0]));
-    web.AddTimeslot(new Timeslot(DayInWeek[0], new Time(1200), new Time(1300), web, ClassType[2]));
+    web.AddTimeslot(new Timeslot(Monday, new Time(900), new Time(1100), web, Lecture, 1));
+    web.AddTimeslot(new Timeslot(Monday, new Time(1200), new Time(1300), web, Practical, 1));
+    web.AddTimeslot(new Timeslot(Tuesday, new Time(1200), new Time(1300), web, Practical, 2));
 
     $scope.timetable.AddSubject(web);
-
 });
+
+
+
 
 // Model Classes
 function Time(time, deltaTime) {
@@ -71,6 +89,12 @@ function Time(time, deltaTime) {
         return sign * (hours + mins);
     };
 
+    this.get = function() {
+        return this.time >= 1000? new String(this.time):
+            this.time >= 100? new String(0).concat(new String(this.time)):
+                new String(0).concat(new String(0)).concat(new String(this.time));
+    };
+
     // Constructor
     this.time = time;
     if(deltaTime) {
@@ -79,7 +103,7 @@ function Time(time, deltaTime) {
 
 }
 
-function Timeslot(timetableDay, startTime, endTime, subject, classType) {
+function Timeslot(timetableDay, startTime, endTime, subject, classType, number) {
 
     // Constructor
     this.timetableDay = timetableDay;
@@ -87,6 +111,7 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType) {
     this.endTime = endTime;
     this.subject = subject;
     this.classType = classType;
+    this.number = number;
     this.ticked = false;
 
     // Methods
@@ -126,24 +151,6 @@ function TimetableDay() {
     // Constructor
     this.timeslots = [];
 
-    this.GetEarliestClass = function() {
-        var length = this.timeslots.length;
-
-        if(length > 1)
-            this.RearrangeTimeslots();
-
-        return  length >= 1? this.timeslots[0]: null;
-    };
-
-    this.GetLatestClass = function() {
-        var length = this.timeslots.length;
-
-        if(length > 1)
-            this.RearrangeTimeslots();
-
-        return  length >= 1? this.timeslots[length - 1]: null;
-    };
-
     this.RearrangeTimeslots = function() {
         if(this.timeslots.length > 1) {
             this.timeslots.sort(function(a, b) {
@@ -173,19 +180,25 @@ function Timetable() {
     this.timetableDays = [];
 
     for(var i = 0; i < DayInWeek.length; i++) {
-        this.timetableDays[DayInWeek[i]] = new TimetableDay();
+        this.timetableDays[i] = new TimetableDay();
     }
 
     this.getTimeGaps = function() {
         var timeGaps = [];
 
-        for(var day in timetableDays)
-            for(var timeslots in day) {
-                if(!timeGaps.contains(timeslots.startTime))
-                    timeGaps.push(timeslots.startTime);
-                if(!timeGaps.contains(timeslots.endTime))
-                    timeGaps.push(timeslots.endTime);
+        timeGaps.push(new Time(800));
+        timeGaps.push(new Time (1800));
+
+        for(var i = 0; i < DayInWeek.length; i++) {
+            for (var j = 0; j < this.timetableDays[i].timeslots.length; j++) {
+                var timeslot = this.timetableDays[i].timeslots[j];
+
+                if (timeGaps.indexOf(timeslot.startTime) < 0)
+                    timeGaps.push(timeslot.startTime);
+                if (timeGaps.indexOf(timeslot.endTime) < 0)
+                    timeGaps.push(timeslot.endTime);
             }
+        }
 
         timeGaps.sort(function(a, b) {
             return a.Difference(b) % 2;
@@ -195,15 +208,14 @@ function Timetable() {
     };
 
     this.Reset = function () {
-        for(var timetableDay in this.timetableDays)
-            timetableDay.Reset()
+        for(var i = 0; i < this.timetableDays; i++)
+            this.timetableDays[i].Reset()
     };
 
     this.AddSubject = function(subject) {
-        for(var timeslotByType in subject.timeslots)
-            for(var timeslot in subject.timeslots[timeslotByType])
-                this.timetableDays[timeslot.timetableDay].timeslots.push(timeslot);
-
+        for(var i = 0; i < subject.timeslots.length; i++)
+            for(var j = 0; j < subject.timeslots[i].length; j++)
+                this.timetableDays[subject.timeslots[i][j].timetableDay].timeslots.push(subject.timeslots[i][j]);
 
     };
 
@@ -222,7 +234,7 @@ function Subject(timetable, subjectCode, subjectName) {
     this.timeslots = [];
 
     for(var i = 0; i < ClassType.length; i++)
-        this.timeslots[ClassType[i]] = [];
+        this.timeslots[i] = [];
 
     // Methods
     this.AddTimeslot = function (timeslot) {
@@ -230,6 +242,7 @@ function Subject(timetable, subjectCode, subjectName) {
     };
 
     this.Tick = function(timeslot) {
+        // TODO: resolve logic problem here
         if(!this.timetable.HasClash(timeslot)) {
             timeslot.ticked = true;
             for(var otherTimeslot in timeslot[timeslot.classType])

@@ -16,14 +16,16 @@
 				<div class="col-sm-10 panel panel-default scrollable-x">
 					<table id="timetable" class="table table-bordered">
 						<thead>
-                            <td></td>
-
-                            var timeGaps = timetable.getTimeGaps();
-                            var numberOfGaps = timeGaps.length;
-
-                            <div ng-repeat="timeGap in timeGaps track by $index">
-                                <td ng-if="!$last">{{ timeGap }}<br/>{{ timeGaps[$index + 1] }}</td>
-                            </div>
+							<tr>
+                            	<td></td>
+								{{
+									timeGaps = timetable.getTimeGaps();
+									numberOfGaps = timeGaps.length;
+								}}
+								<td ng-repeat="timeGap in timeGaps track by $index">
+									<span ng-if="!$last">{{ timeGap }}<br/>{{ timeGaps[$index + 1] }}</span>
+								</td>
+							</tr>
 						</thead>
 						<tbody>
                             <tr ng-repeat="var dayOfWeek in DayInWeek">
