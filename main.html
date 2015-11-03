@@ -18,22 +18,19 @@
 						<thead>
 							<tr>
                             	<td></td>
-								{{
-									timeGaps = timetable.getTimeGaps();
-									numberOfGaps = timeGaps.length;
-								}}
-								<td ng-repeat="timeGap in timeGaps track by $index">
-									<span ng-if="!$last">{{ timeGap }}<br/>{{ timeGaps[$index + 1] }}</span>
+								<td ng-repeat="timeGap in (sorted = (timetable.getTimeGaps() | orderBy: 'time')) track by $index"
+									ng-if="!$last">
+									{{ timeGap.get() }} <br/> {{ sorted[$index + 1].get() }}
 								</td>
 							</tr>
 						</thead>
 						<tbody>
-                            <tr ng-repeat="var dayOfWeek in DayInWeek">
-                                <!--
+                            <tr ng-repeat="dayOfWeek in DayInWeek track by $index">
                                 <td>{{ dayOfWeek }}</td>
-                                <td ng-repeat="currentTimeSlot in timeSlot track by $index" ng-click="changeColor($event)">
-                                    {{ subjects[currentTimeSlot] }}
-                                </td>-->
+								{{ timeslots = timetable.timetableDays[$index]; }}
+                                <td ng-repeat="currentTimeSlot in timeslots" ng-click="changeColor($event)">
+                                    {{ currentTimeSlot }}
+                                </td>
                             </tr>
 						</tbody>
 					</table>

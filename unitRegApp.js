@@ -39,6 +39,9 @@ app.controller("unitRegController", function($scope) {
     web.AddTimeslot(new Timeslot(Tuesday, new Time(1200), new Time(1300), web, Practical, 2));
 
     $scope.timetable.AddSubject(web);
+
+    console.log($scope.timetable.getTimeGaps());
+
 });
 
 
@@ -90,7 +93,7 @@ function Time(time, deltaTime) {
     };
 
     this.get = function() {
-        return this.time >= 1000? new String(this.time):
+        return this.time >= 1000? this.time:
             this.time >= 100? new String(0).concat(new String(this.time)):
                 new String(0).concat(new String(0)).concat(new String(this.time));
     };
@@ -178,33 +181,22 @@ function Timetable() {
 
     // Constructor
     this.timetableDays = [];
+    this.timeGaps = [];
+
+    // Add earliest and latest time
+    this.timeGaps.push(new Time(800));
+    this.timeGaps.push(new Time (1800));
 
     for(var i = 0; i < DayInWeek.length; i++) {
         this.timetableDays[i] = new TimetableDay();
     }
 
     this.getTimeGaps = function() {
-        var timeGaps = [];
-
-        timeGaps.push(new Time(800));
-        timeGaps.push(new Time (1800));
-
-        for(var i = 0; i < DayInWeek.length; i++) {
-            for (var j = 0; j < this.timetableDays[i].timeslots.length; j++) {
-                var timeslot = this.timetableDays[i].timeslots[j];
-
-                if (timeGaps.indexOf(timeslot.startTime) < 0)
-                    timeGaps.push(timeslot.startTime);
-                if (timeGaps.indexOf(timeslot.endTime) < 0)
-                    timeGaps.push(timeslot.endTime);
-            }
-        }
-
-        timeGaps.sort(function(a, b) {
+        this.timeGaps.sort(function(a, b) {
             return a.Difference(b) % 2;
         });
 
-        return timeGaps;
+        return this.timeGaps;
     };
 
     this.Reset = function () {
@@ -214,8 +206,16 @@ function Timetable() {
 
     this.AddSubject = function(subject) {
         for(var i = 0; i < subject.timeslots.length; i++)
-            for(var j = 0; j < subject.timeslots[i].length; j++)
-                this.timetableDays[subject.timeslots[i][j].timetableDay].timeslots.push(subject.timeslots[i][j]);
+            for(var j = 0; j < subject.timeslots[i].length; j++) {
+                var timeslot = subject.timeslots[i][j];
+
+                this.timetableDays[timeslot.timetableDay].timeslots.push(timeslot);
+
+                if (this.timeGaps.indexOf(timeslot.startTime) < 0)
+                    this.timeGaps.push(timeslot.startTime);
+                if (this.timeGaps.indexOf(timeslot.endTime) < 0)
+                    this.timeGaps.push(timeslot.endTime);
+            }
 
     };
 
