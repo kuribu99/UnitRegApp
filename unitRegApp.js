@@ -40,12 +40,17 @@ app.controller("unitRegController", function($scope) {
 
     $scope.timetable.AddSubject(web);
 
-    console.log($scope.timetable.getTimeGaps());
+    $scope.DayInWeek = DayInWeek;
+
+    console.log($scope.timetable);
 
 });
 
 
-
+// Functions
+function SortTime(time, otherTime) {
+    return time.Difference(otherTime) % 2;
+}
 
 // Model Classes
 function Time(time, deltaTime) {
@@ -79,8 +84,8 @@ function Time(time, deltaTime) {
 
     this.Difference = function(otherTime) {
         var sign = 1;
-        var mins = this.time % 100 - otherTime % 100;
-        var hours = parseInt(this.time / 100) - parseInt(otherTime / 100);
+        var mins = this.time % 100 - otherTime.time % 100;
+        var hours = parseInt(this.time / 100) - parseInt(otherTime.time / 100);
         if(mins < 0) {
             mins += 60;
             hours--;
@@ -154,16 +159,6 @@ function TimetableDay() {
     // Constructor
     this.timeslots = [];
 
-    this.RearrangeTimeslots = function() {
-        if(this.timeslots.length > 1) {
-            this.timeslots.sort(function(a, b) {
-                return a.Difference(b) % 2;
-            });
-        }
-
-        return this;
-    };
-
     this.HasClash = function(timeslot) {
         for(var otherTimeslot in this.timeslots)
             if(timeslot.subjectCode != otherTimeslot.subjectCode && timeslot.ClashWith(otherTimeslot))
@@ -174,6 +169,14 @@ function TimetableDay() {
     this.Reset = function() {
         this.timeslots.clear();
     };
+
+    this.GetTimeslotByStartTime = function(startTime) {
+        for(var i = 0; i < this.timeslots.length; i++) {
+            if(this.timeslots[i].startTime.Difference(startTime) == 0)
+                return this.timeslots[i];
+        }
+        return false;
+    }
 
 }
 
@@ -192,10 +195,7 @@ function Timetable() {
     }
 
     this.getTimeGaps = function() {
-        this.timeGaps.sort(function(a, b) {
-            return a.Difference(b) % 2;
-        });
-
+        this.timeGaps.sort(SortTime);
         return this.timeGaps;
     };
 
@@ -215,8 +215,10 @@ function Timetable() {
                     this.timeGaps.push(timeslot.startTime);
                 if (this.timeGaps.indexOf(timeslot.endTime) < 0)
                     this.timeGaps.push(timeslot.endTime);
+
             }
 
+        this.timeGaps.sort(SortTime);
     };
 
     this.HasClash = function(timeslot) {
