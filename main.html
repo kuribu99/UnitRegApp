@@ -18,20 +18,17 @@
 						<thead>
 							<tr>
                             	<td></td>
-								<td ng-repeat="timeGap in (timeGaps = timetable.getTimeGaps()) track by $index"
+								<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
 									ng-if="!$last">
-									{{ timeGap.get() }} <br/> {{ timeGaps[$index + 1].get() }}
+									{{ To24HourFormat(timeGap) }} <br/> {{ To24HourFormat(timeGaps[$index + 1]) }}
 								</td>
 							</tr>
 						</thead>
 						<tbody>
                             <tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
-                                <td>{{ DayInWeek[$index] }}</td>
-								<td ng-repeat="timeGap in (timeGaps = timetable.getTimeGaps()) track by $index"
-									ng-if="!$last">
-									<span ng-if="(currentTimeslot = timetableDay.GetTimeslotByStartTime(timeGap))">
-										{{ currentTimeslot.startTime.time }} -  {{ currentTimeslot.endTime.time }}
-									</span>
+                                <td>{{ timetableDay.day }}</td>
+								<td ng-repeat="timeslot in timetableDay.GetArrangedTimeslots() track by $index">
+									{{ timeslot }}
 								</td>
                             </tr>
 						</tbody>

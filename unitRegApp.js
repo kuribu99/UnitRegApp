@@ -1,8 +1,3 @@
-var app = angular.module("unitRegApp", []);
-
-// Constants
-
-// DayInWeek
 const DayInWeek = [
     'Monday',
     'Tuesday',
@@ -29,85 +24,211 @@ const Practical = 2;
 const Other = 3;
 
 // Controller
+var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
+
+    // Methods
+    $scope.To24HourFormat = To24HourFormat;
 
     $scope.timetable = new Timetable();
 
     var web = new Subject(timetable, 'UECS2014', 'Web Application Development');
-    web.AddTimeslot(new Timeslot(Monday, new Time(900), new Time(1100), web, Lecture, 1));
-    web.AddTimeslot(new Timeslot(Monday, new Time(1200), new Time(1300), web, Practical, 1));
-    web.AddTimeslot(new Timeslot(Tuesday, new Time(1200), new Time(1300), web, Practical, 2));
+    web.AddTimeslot(new Timeslot(Monday, 900, 1300, web, Lecture, 1))
+        .AddTimeslot(new Timeslot(Tuesday, 900, 1400, web, Lecture, 2))
+        .AddTimeslot(new Timeslot(Tuesday, 1200, 1300, web, Practical, 1))
+        .AddTimeslot(new Timeslot(Wednesday, 1200, 1300, web, Practical, 2));
 
     $scope.timetable.AddSubject(web);
 
     $scope.DayInWeek = DayInWeek;
 
-    console.log($scope.timetable);
+    console.log($scope.timetable.GetArrangedTimeGaps());
 
 });
 
 
 // Functions
-function SortTime(time, otherTime) {
-    return time.Difference(otherTime) % 2;
+function To24HourFormat(time) {
+    return time >= 1000? time:
+        time >= 100? new String(0).concat(time):
+            new String(0).concat(new String(0)).concat(time);
 }
 
 // Model Classes
-function Time(time, deltaTime) {
-
-    // Methods
-    this.Add = function(otherTime) {
-        var mins = this.time % 100 + otherTime % 100;
-        var additionalHours = mins % 60;
-        var totalHours = parseInt(this.time / 100) + parseInt(otherTime / 100) + additionalHours;
-        totalHours = totalHours % 24;
-
-        this.time = totalHours * 100 + mins;
-
-        return this;
-    };
-
-    this.Subtract = function(otherTime) {
-        var mins = this.time % 100 - otherTime % 100;
-        var hours = parseInt(this.time / 100) - parseInt(otherTime / 100);
-        if(mins < 0) {
-            mins += 60;
-            hours--;
-        }
-        if(hours < 0)
-            hours += 24;
-
-        this.time = hours * 100 + mins;
-
-        return this;
-    };
-
-    this.Difference = function(otherTime) {
-        var sign = 1;
-        var mins = this.time % 100 - otherTime.time % 100;
-        var hours = parseInt(this.time / 100) - parseInt(otherTime.time / 100);
-        if(mins < 0) {
-            mins += 60;
-            hours--;
-        }
-        if(hours < 0) {
-            sign = -1;
-            hours = Math.abs(hours);
-        }
-        return sign * (hours + mins);
-    };
-
-    this.get = function() {
-        return this.time >= 1000? this.time:
-            this.time >= 100? new String(0).concat(new String(this.time)):
-                new String(0).concat(new String(0)).concat(new String(this.time));
-    };
+function Subject(timetable, subjectCode, subjectName) {
 
     // Constructor
-    this.time = time;
-    if(deltaTime) {
-        this.Add(deltaTime);
+    this.timetable = timetable;
+    this.subjectCode = subjectCode;
+    this.subjectName = subjectName;
+    this.timeslots = [];
+
+    ClassType.forEach(function(classType) {
+        this.timeslots.push([]);
+    }, this);
+
+    // Methods
+    this.AddTimeslot = function (timeslot) {
+        this.timeslots[timeslot.classType].push(timeslot);
+        return this;
+    };
+
+    this.Tick = function(timeslot) {
+        // TODO: resolve logic problem here
+        if(!this.timetable.HasClash(timeslot)) {
+            timeslot.ticked = true;
+            for(var otherTimeslot in timeslot[timeslot.classType])
+                otherTimeslot.ticked = false;
+        }
+
+        return this;
+    };
+
+}
+
+function Timetable() {
+
+    // Constructor
+    this.timetableDays = [];
+    this.timeGaps = [];
+
+    // Create all days of in the week
+    DayInWeek.forEach(function(day) {
+        this.timetableDays.push(new TimetableDay(this, day));
+    }, this);
+
+    // Methods
+    this.GetArrangedTimeGaps = function() {
+        return this.ClearTimeGaps()
+            .AddDefaultTimeGaps()
+            .InitializeTimeGaps()
+            .SortTimeGaps()
+            .timeGaps;
+    };
+
+    this.ClearTimeGaps = function() {
+        while(this.timeGaps.length > 0)
+            this.timeGaps.pop();
+        return this;
+    };
+
+    this.AddDefaultTimeGaps = function() {
+        // Add earliest and latest time
+        this.timeGaps.push(800);
+        this.timeGaps.push(1800);
+
+        return this;
+    };
+
+    this.InitializeTimeGaps = function() {
+
+        this.timetableDays.forEach(function(timetableDay) {
+            timetableDay.timeslots.forEach(function(timeslot){
+                this.AddTimeslot(timeslot);
+            }, this);
+        }, this);
+
+        return this;
+    };
+
+    this.AddTimeGap = function(time){
+        if(this.timeGaps.indexOf(time) < 0)
+            this.timeGaps.push(time);
+        return this;
     }
+
+    this.SortTimeGaps = function() {
+        this.timeGaps.sort();
+        return this;
+    };
+
+    this.AddSubject = function(subject) {
+        var timeslotByClassTypes = 1;
+        var timeslot;
+
+        subject.timeslots.forEach(function(timeslotByClassTypes) {
+            timeslotByClassTypes.forEach(function(timeslot) {
+                this.timetableDays[timeslot.timetableDay].AddTimeslot(timeslot);
+            }, this);
+        }, this);
+
+        this.timeGaps.sort();
+
+        return this;
+    };
+
+    this.AddTimeslot = function(timeslot) {
+        return this
+            .AddTimeGap(timeslot.startTime)
+            .AddTimeGap(timeslot.endTime);
+    };
+
+    this.HasClash = function(timeslot) {
+        this.timetableDays[timeslot.timetableDay].HasClash(timeslot);
+    };
+
+}
+
+function TimetableDay(timetable, day) {
+
+    // Constructor
+    this.timetable = timetable;
+    this.day = day;
+    this.timeslots = [];
+    this.arrangedTimeslots = [];
+
+    this.HasClash = function(timeslot) {
+        // TODO: complete logic
+        for(var otherTimeslot in this.timeslots)
+            if(timeslot.subjectCode != otherTimeslot.subjectCode && timeslot.ClashWith(otherTimeslot))
+                    return true;
+        return false;
+    };
+
+    this.AddTimeslot = function(timeslot) {
+        this.timeslots.push(timeslot);
+        return this;
+    };
+
+    this.GetTimeslotByStartTime = function(startTime) {
+        for(var timeslot in this.timeslots) {
+            if(timeslot.startTime == startTime)
+                return timeslot;
+        }
+        return false;
+    };
+
+    this.ClearArrangedTimeslots = function() {
+        while(this.arrangedTimeslots.length > 0)
+            this.arrangedTimeslots.pop();
+
+        return this;
+    };
+
+    this.InitializeArrangedTimeslots = function() {
+        var timeGaps = this.timetable.GetArrangedTimeGaps();
+        var counter;
+        var timeslot;
+
+        var i = 0;
+        while(i < timeGaps.length - 1) {
+            counter = 1;
+            timeslot = this.GetTimeslotByStartTime(timeGaps[i++]);
+
+            if(timeslot)
+                while(timeslot.endTime - timeGaps[i++] > 0)
+                    counter++;
+
+            this.arrangedTimeslots.push(counter);
+        }
+        return this;
+    };
+
+    this.GetArrangedTimeslots = function() {
+        return this.ClearArrangedTimeslots()
+            .InitializeArrangedTimeslots()
+            .arrangedTimeslots;
+    };
 
 }
 
@@ -123,16 +244,10 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType, number) 
     this.ticked = false;
 
     // Methods
-    this.Duration = function() {
-        return this.endTime.Difference(this.startTime);
-    };
-    
-    this.Gap = function(otherTimeslot) {
-        return this.endTime.Difference(otherTimeslot.startTime);
-    };
-
     this.ClashWith = function(otherTimeslot) {
-        var startTimeDifference = this.startTime.Difference(otherTimeslot.startTime);
+
+        // TODO: verify
+        var startTimeDifference = this.startTime - otherTimeslot.startTime;
 
         if(startTimeDifference == 0)
             return true;
@@ -140,12 +255,12 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType, number) 
         // This timeslot is later than other class
         // If this timeslot starts before other timeslot ends, then it has clashes
         else if (startTimeDifference > 0)
-            return this.startTime.Difference(otherTimeslot.endTime) < 0;
+            return this.startTime - otherTimeslot.endTime < 0;
 
         // This timeslot is earlier than other timeslot
         // If this timeslot ends after other timeslot, then it has clashes
         else
-            return this.endTime.Difference(otherTimeslot.startTime) > 0;
+            return this.endTime - otherTimeslot.startTime > 0;
     };
 
     this.Tick = function() {
@@ -154,105 +269,20 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType, number) 
 
 }
 
-function TimetableDay() {
+function TimeGap(span, timeslot) {
 
     // Constructor
-    this.timeslots = [];
-
-    this.HasClash = function(timeslot) {
-        for(var otherTimeslot in this.timeslots)
-            if(timeslot.subjectCode != otherTimeslot.subjectCode && timeslot.ClashWith(otherTimeslot))
-                    return true;
-        return false;
-    };
-
-    this.Reset = function() {
-        this.timeslots.clear();
-    };
-
-    this.GetTimeslotByStartTime = function(startTime) {
-        for(var i = 0; i < this.timeslots.length; i++) {
-            if(this.timeslots[i].startTime.Difference(startTime) == 0)
-                return this.timeslots[i];
-        }
-        return false;
-    }
-
-}
-
-function Timetable() {
-
-    // Constructor
-    this.timetableDays = [];
-    this.timeGaps = [];
-
-    // Add earliest and latest time
-    this.timeGaps.push(new Time(800));
-    this.timeGaps.push(new Time (1800));
-
-    for(var i = 0; i < DayInWeek.length; i++) {
-        this.timetableDays[i] = new TimetableDay();
-    }
-
-    this.getTimeGaps = function() {
-        this.timeGaps.sort(SortTime);
-        return this.timeGaps;
-    };
-
-    this.Reset = function () {
-        for(var i = 0; i < this.timetableDays; i++)
-            this.timetableDays[i].Reset()
-    };
-
-    this.AddSubject = function(subject) {
-        for(var i = 0; i < subject.timeslots.length; i++)
-            for(var j = 0; j < subject.timeslots[i].length; j++) {
-                var timeslot = subject.timeslots[i][j];
-
-                this.timetableDays[timeslot.timetableDay].timeslots.push(timeslot);
-
-                if (this.timeGaps.indexOf(timeslot.startTime) < 0)
-                    this.timeGaps.push(timeslot.startTime);
-                if (this.timeGaps.indexOf(timeslot.endTime) < 0)
-                    this.timeGaps.push(timeslot.endTime);
-
-            }
-
-        this.timeGaps.sort(SortTime);
-    };
-
-    this.HasClash = function(timeslot) {
-        this.timetableDays[timeslot.timetableDay].HasClash(timeslot);
-    };
-
-}
-
-function Subject(timetable, subjectCode, subjectName) {
-
-    // Constructor
-    this.timetable = timetable;
-    this.subjectCode = subjectCode;
-    this.subjectName = subjectName;
-    this.timeslots = [];
-
-    for(var i = 0; i < ClassType.length; i++)
-        this.timeslots[i] = [];
+    this.span = span;
+    if(timeslot)
+        this.timeslot = timeslot;
 
     // Methods
-    this.AddTimeslot = function (timeslot) {
-        this.timeslots[timeslot.classType].push(timeslot);
+    this.GetDetails = function() {
+        if(!timeslot) return "";
+        else return timeslot.subjectCode
+            .concat(" ")
+            .concat(timeslot.subjectName)
+            .concat("-")
+            .concat(timeslot.number);
     };
-
-    this.Tick = function(timeslot) {
-        // TODO: resolve logic problem here
-        if(!this.timetable.HasClash(timeslot)) {
-            timeslot.ticked = true;
-            for(var otherTimeslot in timeslot[timeslot.classType])
-                otherTimeslot.ticked = false;
-        }
-
-        return timeslot.ticked;
-    };
-
-
 }
