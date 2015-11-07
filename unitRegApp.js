@@ -27,22 +27,31 @@ const Other = 3;
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
 
-    // Methods
-    $scope.To24HourFormat = To24HourFormat;
-
+    // Variables
+    $scope.DayInWeek = DayInWeek;
     $scope.timetable = new Timetable();
 
-    var web = new Subject(timetable, 'UECS2014', 'Web Application Development');
-    web.AddTimeslot(new Timeslot(Monday, 900, 1300, web, Lecture, 1))
-        .AddTimeslot(new Timeslot(Tuesday, 900, 1400, web, Lecture, 2))
-        .AddTimeslot(new Timeslot(Tuesday, 1200, 1300, web, Practical, 1))
-        .AddTimeslot(new Timeslot(Wednesday, 1200, 1300, web, Practical, 2));
+    // Methods
+    $scope.To24HourFormat = To24HourFormat;
+    $scope.NotifyChanges = function() {
+        $scope.timetable.NotifyChanges();
+    };
 
+    // Add dummy data
+    var web = new Subject(timetable, 'UECS2014', 'Web Application Development');
+    web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
+        .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
+        .AddTimeslot(Tuesday, 1200, 1300, Practical, 1)
+        .AddTimeslot(Wednesday, 1200, 1300, Practical, 2);
     $scope.timetable.AddSubject(web);
 
-    $scope.DayInWeek = DayInWeek;
-
-    console.log($scope.timetable.GetArrangedTimeGaps());
+    var fyp = new Subject(timetable, 'UECS3114', 'Project I');
+    fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
+        .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
+        .AddTimeslot(Friday, 830, 1030, Practical, 1)
+        .AddTimeslot(Friday, 1430, 1630, Practical, 2);
+    $scope.timetable.AddSubject(fyp);
+    $scope.NotifyChanges();
 
 });
 
@@ -52,6 +61,10 @@ function To24HourFormat(time) {
     return time >= 1000? time:
         time >= 100? new String(0).concat(time):
             new String(0).concat(new String(0)).concat(time);
+}
+
+function SortTime(timeA, timeB) {
+    return timeA - timeB;
 }
 
 // Model Classes
@@ -68,8 +81,9 @@ function Subject(timetable, subjectCode, subjectName) {
     }, this);
 
     // Methods
-    this.AddTimeslot = function (timeslot) {
-        this.timeslots[timeslot.classType].push(timeslot);
+    this.AddTimeslot = function (timetableDay, startTime, endTime, classType, number) {
+        var timeslot = new Timeslot(timetableDay, startTime, endTime, this, classType, number);
+        this.timeslots[classType].push(timeslot);
         return this;
     };
 
@@ -84,6 +98,9 @@ function Subject(timetable, subjectCode, subjectName) {
         return this;
     };
 
+    this.GetDetails = function() {
+        return this.subjectCode.concat(' ').concat(this.subjectName);
+    };
 }
 
 function Timetable() {
@@ -91,6 +108,7 @@ function Timetable() {
     // Constructor
     this.timetableDays = [];
     this.timeGaps = [];
+    this.hasChange = false;
 
     // Create all days of in the week
     DayInWeek.forEach(function(day) {
@@ -98,12 +116,22 @@ function Timetable() {
     }, this);
 
     // Methods
+    this.NotifyChanges = function() {
+        this.hasChange = true;
+        this.timetableDays.forEach(function(timetableDay) {
+            timetableDay.NotifyChanges();
+        });
+    };
+
     this.GetArrangedTimeGaps = function() {
-        return this.ClearTimeGaps()
-            .AddDefaultTimeGaps()
-            .InitializeTimeGaps()
-            .SortTimeGaps()
-            .timeGaps;
+        if(this.hasChange) {
+            this.ClearTimeGaps()
+                .AddDefaultTimeGaps()
+                .InitializeTimeGaps()
+                .SortTimeGaps()
+                .hasChange = false;
+        }
+        return this.timeGaps;
     };
 
     this.ClearTimeGaps = function() {
@@ -138,7 +166,7 @@ function Timetable() {
     }
 
     this.SortTimeGaps = function() {
-        this.timeGaps.sort();
+        this.timeGaps.sort(SortTime);
         return this;
     };
 
@@ -152,7 +180,7 @@ function Timetable() {
             }, this);
         }, this);
 
-        this.timeGaps.sort();
+        this.timeGaps.sort(SortTime);
 
         return this;
     };
@@ -174,8 +202,14 @@ function TimetableDay(timetable, day) {
     // Constructor
     this.timetable = timetable;
     this.day = day;
+    this.hasChange = false;
     this.timeslots = [];
     this.arrangedTimeslots = [];
+
+    // Methods
+    this.NotifyChanges = function() {
+        this.hasChange = true;
+    };
 
     this.HasClash = function(timeslot) {
         // TODO: complete logic
@@ -191,11 +225,12 @@ function TimetableDay(timetable, day) {
     };
 
     this.GetTimeslotByStartTime = function(startTime) {
-        for(var timeslot in this.timeslots) {
+        var result = false;
+        this.timeslots.forEach(function(timeslot) {
             if(timeslot.startTime == startTime)
-                return timeslot;
-        }
-        return false;
+                result = timeslot;
+        }, this);
+        return result;
     };
 
     this.ClearArrangedTimeslots = function() {
@@ -207,27 +242,33 @@ function TimetableDay(timetable, day) {
 
     this.InitializeArrangedTimeslots = function() {
         var timeGaps = this.timetable.GetArrangedTimeGaps();
-        var counter;
+        var colspan;
         var timeslot;
 
         var i = 0;
         while(i < timeGaps.length - 1) {
-            counter = 1;
+            colspan = 1;
             timeslot = this.GetTimeslotByStartTime(timeGaps[i++]);
 
             if(timeslot)
-                while(timeslot.endTime - timeGaps[i++] > 0)
-                    counter++;
+                while(timeslot.endTime - timeGaps[i] > 0) {
+                    colspan++;
+                    i++;
+                }
 
-            this.arrangedTimeslots.push(counter);
+            this.arrangedTimeslots.push(new TimeGap(colspan, timeslot));
         }
         return this;
     };
 
     this.GetArrangedTimeslots = function() {
-        return this.ClearArrangedTimeslots()
-            .InitializeArrangedTimeslots()
-            .arrangedTimeslots;
+        if(this.hasChange) {
+            this.ClearArrangedTimeslots()
+                .InitializeArrangedTimeslots()
+                .hasChange = false;
+        }
+        console.log(this.arrangedTimeslots);
+        return this.arrangedTimeslots
     };
 
 }
@@ -267,22 +308,22 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType, number) 
         this.subject.Tick(this);
     };
 
+    this.GetDetails = function() {
+        return this.subject.GetDetails()
+            .concat(' ')
+            .concat(ClassType[classType].charAt(0)).concat(number);
+    };
 }
 
-function TimeGap(span, timeslot) {
+function TimeGap(colSpan, timeslot) {
 
     // Constructor
-    this.span = span;
-    if(timeslot)
-        this.timeslot = timeslot;
+    this.colSpan = colSpan;
+    this.timeslot = timeslot;
 
     // Methods
     this.GetDetails = function() {
-        if(!timeslot) return "";
-        else return timeslot.subjectCode
-            .concat(" ")
-            .concat(timeslot.subjectName)
-            .concat("-")
-            .concat(timeslot.number);
+        if(!this.timeslot) return "";
+        else return this.timeslot.GetDetails();;
     };
 }

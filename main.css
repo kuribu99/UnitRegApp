@@ -7,6 +7,10 @@
     overflow-x: auto;
 }
 
+.padding-m {
+    padding: 15px;
+}
+
 .scrollable-y {
     overflow-y: auto;
 }
@@ -19,4 +23,9 @@ table#timetable tbody tr td:first-child {
 
 table#timetable tbody {
     cursor: pointer;
+}
+
+td.has-timeslot {
+    padding: 1px;
+    background-color: #c7ddef;
 }

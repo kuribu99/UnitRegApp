@@ -12,8 +12,8 @@
 	</head>
 	<body data-ng-app="unitRegApp" data-ng-controller="unitRegController">
 		<div class="container-fluid">
-			<div class="row full-height">
-				<div class="col-sm-10 panel panel-default scrollable-x">
+			<div class="row full-height scrollable-y">
+				<div class="col-sm-12 scrollable-x padding-m">
 					<table id="timetable" class="table table-bordered">
 						<thead>
 							<tr>
@@ -27,15 +27,17 @@
 						<tbody>
                             <tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
                                 <td>{{ timetableDay.day }}</td>
-								<td ng-repeat="timeslot in timetableDay.GetArrangedTimeslots() track by $index">
-									{{ timeslot }}
+								<td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
+									colspan="{{ timegap.colSpan }}"
+									class="{{ timegap.timeslot? 'has-timeslot':'' }}">
+									{{ timegap.GetDetails() }}
 								</td>
                             </tr>
 						</tbody>
 					</table>
 				</div>
-				<div class="col-sm-2 panel panel-default">
-					right col
+				<div class="col-sm-12 scrollable-x padding-m">
+					bot col
 				</div>
 			</div>
 		</div>
