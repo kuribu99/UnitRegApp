@@ -1,6 +1,9 @@
 .full-height {
-    min-height: 100%;
-    height: 100%;
+    height: 500px;
+}
+
+.half-height {
+    height: 250px;
 }
 
 .scrollable-x {
@@ -9,6 +12,10 @@
 
 .padding-m {
     padding: 15px;
+}
+
+.margin-m {
+    margin: 15px;
 }
 
 .scrollable-y {
@@ -28,4 +35,18 @@ table#timetable tbody {
 td.has-timeslot {
     padding: 1px;
     background-color: #c7ddef;
+}
+
+.bottom-left {
+    background-color: #f2dede;
+}
+
+.bottom-right {
+     background-color: #dedef2;
+ }
+
+.subject {
+    padding: 5px;
+    margin: 5px;
+    background-color: #ffffff;
 }

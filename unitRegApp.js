@@ -16,12 +16,11 @@ const Saturday = 5;
 const Sunday = 6;
 
 const ClassType = [
-    'Lecture', 'Tutorial', 'Practical', 'Other'
+    'Lecture', 'Tutorial', 'Practical'
 ];
 const Lecture = 0;
 const Tutorial = 1;
 const Practical = 2;
-const Other = 3;
 
 // Controller
 var app = angular.module("unitRegApp", []);
@@ -29,6 +28,7 @@ app.controller("unitRegController", function($scope) {
 
     // Variables
     $scope.DayInWeek = DayInWeek;
+    $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
 
     // Methods
@@ -51,11 +51,20 @@ app.controller("unitRegController", function($scope) {
         .AddTimeslot(Friday, 830, 1030, Practical, 1)
         .AddTimeslot(Friday, 1430, 1630, Practical, 2);
     $scope.timetable.AddSubject(fyp);
+
+    var tp = new Subject(timetable, 'UECS3004', 'Team Project');
+    tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
+        .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
+    $scope.timetable.AddSubject(tp);
+
     $scope.NotifyChanges();
 
 });
 
-
+$(document).ready(function() {
+    $('.full-height').height($(window).height());
+    $('.half-height').height($(window).height() / 2);
+});
 // Functions
 function To24HourFormat(time) {
     return time >= 1000? time:
@@ -106,6 +115,7 @@ function Subject(timetable, subjectCode, subjectName) {
 function Timetable() {
 
     // Constructor
+    this.subjects = [];
     this.timetableDays = [];
     this.timeGaps = [];
     this.hasChange = false;
@@ -163,7 +173,7 @@ function Timetable() {
         if(this.timeGaps.indexOf(time) < 0)
             this.timeGaps.push(time);
         return this;
-    }
+    };
 
     this.SortTimeGaps = function() {
         this.timeGaps.sort(SortTime);
@@ -171,9 +181,7 @@ function Timetable() {
     };
 
     this.AddSubject = function(subject) {
-        var timeslotByClassTypes = 1;
-        var timeslot;
-
+        this.subjects.push(subject);
         subject.timeslots.forEach(function(timeslotByClassTypes) {
             timeslotByClassTypes.forEach(function(timeslot) {
                 this.timetableDays[timeslot.timetableDay].AddTimeslot(timeslot);
@@ -324,6 +332,6 @@ function TimeGap(colSpan, timeslot) {
     // Methods
     this.GetDetails = function() {
         if(!this.timeslot) return "";
-        else return this.timeslot.GetDetails();;
+        else return this.timeslot.GetDetails();
     };
 }
