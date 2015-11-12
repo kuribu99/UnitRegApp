@@ -23,8 +23,12 @@ const Tutorial = 1;
 const Practical = 2;
 
 // Controller
+var scope;
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
+
+    // Bind to external
+    scope = $scope;
 
     // Variables
     $scope.DayInWeek = DayInWeek;
@@ -38,21 +42,21 @@ app.controller("unitRegController", function($scope) {
     };
 
     // Add dummy data
-    var web = new Subject(timetable, 'UECS2014', 'Web Application Development');
+    var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
     web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
         .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-        .AddTimeslot(Tuesday, 1200, 1300, Practical, 1)
+        .AddTimeslot(Friday, 1200, 1300, Practical, 1)
         .AddTimeslot(Wednesday, 1200, 1300, Practical, 2);
     $scope.timetable.AddSubject(web);
 
-    var fyp = new Subject(timetable, 'UECS3114', 'Project I');
+    var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I');
     fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
         .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
         .AddTimeslot(Friday, 830, 1030, Practical, 1)
         .AddTimeslot(Friday, 1430, 1630, Practical, 2);
     $scope.timetable.AddSubject(fyp);
 
-    var tp = new Subject(timetable, 'UECS3004', 'Team Project');
+    var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project');
     tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
         .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
     $scope.timetable.AddSubject(tp);
@@ -62,9 +66,81 @@ app.controller("unitRegController", function($scope) {
 });
 
 $(document).ready(function() {
-    $('.full-height').height($(window).height());
-    $('.half-height').height($(window).height() / 2);
+
+    // Refresh once first
+    RefreshUIHeight();
+    
+    // Set height to fit screen
+    $(window).resize(RefreshUIHeight);
+
+    // Initialize datas
+    $('div#timetable-container').data('scale', 1);
+
+    // Add event listeners
+    $('button#zoom-in').click(function () {
+        var timetableDiv = $('div#timetable-container');
+        var currentScale = timetableDiv.data('scale');
+
+        if(currentScale < 1.5) {
+            currentScale += 0.1;
+        }
+
+        timetableDiv.css({
+            zoom: currentScale
+        });
+        timetableDiv.data('scale', currentScale);
+    });
+
+    $('button#zoom-out').click(function () {
+        var timetableDiv = $('div#timetable-container');
+        var currentScale = timetableDiv.data('scale');
+
+        if(currentScale > 0.5) {
+            currentScale -= 0.1;
+        }
+
+        timetableDiv.css({
+            zoom: currentScale
+        });
+        timetableDiv.data('scale', currentScale);
+    });
+
+    $('button#zoom-reset').click(function () {
+        $('div#timetable-container')
+            .css({
+                zoom: 1
+            })
+            .data('scale', 1);
+    });
+
+    $('button#btn-print').click(function () {
+        var print = window.open('', 'Timetable');
+
+        print.document.write('<html><head><title>Timetable</title>');
+        print.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
+        print.document.write('</head><body >');
+        print.document.write($('div#timetable-container').html());
+        print.document.write('</body></html>');
+
+        print.document.close(); // necessary for IE >= 10
+        print.focus(); // necessary for IE >= 10
+
+        print.print();
+        print.close();
+    });
+
+    $('input.timeslot').change(function() {
+        scope.timetable.NotifyChanges();
+    });
+
 });
+
+// UI related functions
+function RefreshUIHeight() {
+    $('.full-height').height(window.innerHeight * 0.9);
+    $('.half-height').height(window.innerHeight * 0.45);
+}
+
 // Functions
 function To24HourFormat(time) {
     return time >= 1000? time:
@@ -85,9 +161,8 @@ function Subject(timetable, subjectCode, subjectName) {
     this.subjectName = subjectName;
     this.timeslots = [];
 
-    ClassType.forEach(function(classType) {
+    for(var i in ClassType)
         this.timeslots.push([]);
-    }, this);
 
     // Methods
     this.AddTimeslot = function (timetableDay, startTime, endTime, classType, number) {
@@ -97,11 +172,20 @@ function Subject(timetable, subjectCode, subjectName) {
     };
 
     this.Tick = function(timeslot) {
-        // TODO: resolve logic problem here
-        if(!this.timetable.HasClash(timeslot)) {
-            timeslot.ticked = true;
-            for(var otherTimeslot in timeslot[timeslot.classType])
-                otherTimeslot.ticked = false;
+
+        try {
+            if(!this.timetable.HasClash(timeslot)) {
+                this.timeslots[timeslot.classType].forEach(function (otherTimeslot) {
+                    otherTimeslot.ticked = false;
+                });
+                timeslot.ticked = true;
+                this.timetable.NotifyChanges();
+            }
+        }
+        catch (timeslot) {
+            alert('Unable to tick this timeslot. Has clashes with:\n'
+                + timeslot.subject.subjectCode + ' ' + timeslot.subject.subjectName + ' '
+                + ClassType[timeslot.classType].charAt(0) + timeslot.number);
         }
 
         return this;
@@ -162,7 +246,8 @@ function Timetable() {
 
         this.timetableDays.forEach(function(timetableDay) {
             timetableDay.timeslots.forEach(function(timeslot){
-                this.AddTimeslot(timeslot);
+                if(timeslot.ticked)
+                    this.AddTimeslot(timeslot);
             }, this);
         }, this);
 
@@ -200,7 +285,8 @@ function Timetable() {
     };
 
     this.HasClash = function(timeslot) {
-        this.timetableDays[timeslot.timetableDay].HasClash(timeslot);
+        // Only need to check the particular day
+        return this.timetableDays[timeslot.timetableDay].HasClash(timeslot);
     };
 
 }
@@ -220,10 +306,17 @@ function TimetableDay(timetable, day) {
     };
 
     this.HasClash = function(timeslot) {
-        // TODO: complete logic
-        for(var otherTimeslot in this.timeslots)
-            if(timeslot.subjectCode != otherTimeslot.subjectCode && timeslot.ClashWith(otherTimeslot))
-                    return true;
+        this.timeslots.forEach(function (otherTimeslot) {
+            // Same subject but is not same type of class considers clashes
+            if(timeslot.subjectCode == otherTimeslot.subjectCode && timeslot.classType != otherTimeslot.classType) {
+                if (otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
+                    throw otherTimeslot;
+            }
+            else if(otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
+                throw otherTimeslot;
+
+        }, this);
+
         return false;
     };
 
@@ -256,13 +349,19 @@ function TimetableDay(timetable, day) {
         var i = 0;
         while(i < timeGaps.length - 1) {
             colspan = 1;
-            timeslot = this.GetTimeslotByStartTime(timeGaps[i++]);
+            timeslot = this.GetTimeslotByStartTime(timeGaps[i]);
+            i++;
 
-            if(timeslot)
-                while(timeslot.endTime - timeGaps[i] > 0) {
-                    colspan++;
-                    i++;
+            if(timeslot) {
+                if(timeslot.ticked) {
+                    while(timeslot.endTime - timeGaps[i] > 0) {
+                        colspan++;
+                        i++;
+                    }
+                } else {
+                    timeslot = false;
                 }
+            }
 
             this.arrangedTimeslots.push(new TimeGap(colspan, timeslot));
         }
@@ -275,7 +374,6 @@ function TimetableDay(timetable, day) {
                 .InitializeArrangedTimeslots()
                 .hasChange = false;
         }
-        console.log(this.arrangedTimeslots);
         return this.arrangedTimeslots
     };
 
@@ -312,8 +410,17 @@ function Timeslot(timetableDay, startTime, endTime, subject, classType, number) 
             return this.endTime - otherTimeslot.startTime > 0;
     };
 
-    this.Tick = function() {
-        this.subject.Tick(this);
+    this.Tick = function(tick) {
+        if(arguments.length == 0) {
+            return this.ticked;
+        } else {
+            if(tick)
+                this.subject.Tick(this);
+            else {
+                this.ticked = false;
+                this.subject.timetable.NotifyChanges();
+            }
+        }
     };
 
     this.GetDetails = function() {

@@ -13,37 +13,59 @@
 	<body data-ng-app="unitRegApp" data-ng-controller="unitRegController">
 		<div class="full-height container-fluid">
 			<div class="col-sm-12 half-height scrollable-y padding-m">
-				<table id="timetable" class="table table-bordered">
-					<thead>
-						<tr>
-							<td></td>
-							<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
-								ng-if="!$last">
-								{{ To24HourFormat(timeGap) }} <br/> {{ To24HourFormat(timeGaps[$index + 1]) }}
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
-							<td>{{ timetableDay.day }}</td>
-							<td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
-								colspan="{{ timegap.colSpan }}"
-								class="{{ timegap.timeslot? 'has-timeslot':'' }}">
-								{{ timegap.GetDetails() }}
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				<div id="timetable-container" class="col-sm-11">
+					<table id="timetable" class="table table-bordered">
+						<thead>
+							<tr>
+								<td></td>
+								<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
+									ng-if="!$last">
+									{{ To24HourFormat(timeGap) }}<br/>{{ To24HourFormat(timeGaps[$index + 1]) }}
+								</td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
+								<td>{{ timetableDay.day }}</td>
+								<td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
+									colspan="{{ timegap.colSpan }}"
+									class="{{ timegap.timeslot? 'has-timeslot':'' }}">
+									{{ timegap.GetDetails() }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="col-sm-1">
+					<button id="zoom-in"class="img-rounded">
+						<span class="glyphicon glyphicon-plus"></span>
+					</button>
+					<br/>
+					<button id="zoom-out" class="img-rounded">
+						<span class="glyphicon glyphicon-minus"></span>
+					</button>
+					<br/>
+					<button id="zoom-reset" class="img-rounded">
+						<span class="glyphicon glyphicon-refresh"></span>
+					</button>
+					<br/>
+					<button id="btn-print" class="img-rounded">
+						<span class="glyphicon glyphicon-print"></span>
+					</button>
+				</div>
 			</div>
 			<div class="col-sm-12 half-height scrollable-y padding-m">
 				<div class="bottom-left col-sm-6 panel panel-default padding-m scrollable-y">
-					<div class="subject" ng-repeat="subject in timetable.subjects track by $index">
+					<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
 						<h3> {{ subject.subjectCode }} {{ subject.subjectName}} </h3>
-							<div class="col-sm-4" ng-repeat="classtype in subject.timeslots">
+							<div class="subject col-sm-4" ng-repeat="classtype in subject.timeslots"
+								ng-if="classtype.length > 0">
 								<h4> {{ ClassType[$index] }}</h4>
 								<div ng-repeat="timeslot in classtype track by $index">
-									<input type="radio"/>
 									<label>
+										<input class="timeslot" type="checkbox"
+											   ng-model="timeslot.Tick"
+											   ng-model-options="{ getterSetter: true }" />
 										{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
 									</label>
 									<br/>
@@ -52,7 +74,7 @@
 					</div>
 				</div>
 				<div class="bottom-right col-sm-6 panel panel-default padding-m scrollable-y">
-					bot right col
+					<h3>Add new Subject</h3>
 				</div>
 			</div>
 		</div>
