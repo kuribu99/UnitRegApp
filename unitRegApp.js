@@ -45,8 +45,9 @@ app.controller("unitRegController", function($scope) {
     var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
     web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
         .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-        .AddTimeslot(Friday, 1200, 1300, Practical, 1)
-        .AddTimeslot(Wednesday, 1200, 1300, Practical, 2);
+        .AddTimeslot(Monday, 1200, 1400, Lecture, 3)
+        .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
+        .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
     $scope.timetable.AddSubject(web);
 
     var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I');
@@ -69,7 +70,7 @@ $(document).ready(function() {
 
     // Refresh once first
     RefreshUIHeight();
-    
+
     // Set height to fit screen
     $(window).resize(RefreshUIHeight);
 
@@ -235,10 +236,9 @@ function Timetable() {
     };
 
     this.AddDefaultTimeGaps = function() {
-        // Add earliest and latest time
-        this.timeGaps.push(800);
-        this.timeGaps.push(1800);
-
+        // Add timeGap with 1 hour gap
+        for(var i = 800; i <= 1600; i+= 100)
+            this.timeGaps.push(i);
         return this;
     };
 
@@ -307,11 +307,13 @@ function TimetableDay(timetable, day) {
 
     this.HasClash = function(timeslot) {
         this.timeslots.forEach(function (otherTimeslot) {
+
             // Same subject but is not same type of class considers clashes
-            if(timeslot.subjectCode == otherTimeslot.subjectCode && timeslot.classType != otherTimeslot.classType) {
-                if (otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
-                    throw otherTimeslot;
-            }
+            if(timeslot.subjectCode == otherTimeslot.subjectCode)
+                if(timeslot.classType != otherTimeslot.classType)
+                    if (otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
+                        throw otherTimeslot;
+
             else if(otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
                 throw otherTimeslot;
 
@@ -325,11 +327,13 @@ function TimetableDay(timetable, day) {
         return this;
     };
 
-    this.GetTimeslotByStartTime = function(startTime) {
+    this.GetTickedTimeslotByStartTime = function(startTime) {
         var result = false;
         this.timeslots.forEach(function(timeslot) {
-            if(timeslot.startTime == startTime)
+            if(timeslot.startTime == startTime && timeslot.ticked) {
+                console.log(timeslot);
                 result = timeslot;
+            }
         }, this);
         return result;
     };
@@ -349,20 +353,15 @@ function TimetableDay(timetable, day) {
         var i = 0;
         while(i < timeGaps.length - 1) {
             colspan = 1;
-            timeslot = this.GetTimeslotByStartTime(timeGaps[i]);
+            timeslot = this.GetTickedTimeslotByStartTime(timeGaps[i]);
             i++;
 
             if(timeslot) {
-                if(timeslot.ticked) {
-                    while(timeslot.endTime - timeGaps[i] > 0) {
-                        colspan++;
-                        i++;
-                    }
-                } else {
-                    timeslot = false;
+                while (timeslot.endTime - timeGaps[i] > 0) {
+                    colspan++;
+                    i++;
                 }
             }
-
             this.arrangedTimeslots.push(new TimeGap(colspan, timeslot));
         }
         return this;
