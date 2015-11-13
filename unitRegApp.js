@@ -23,17 +23,13 @@ const Tutorial = 1;
 const Practical = 2;
 
 // Controller
-var scope;
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
-
-    // Bind to external
-    scope = $scope;
-
     // Variables
     $scope.DayInWeek = DayInWeek;
     $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
+    $scope.newSubject = new Subject($scope.timetable, '', '');
 
     // Methods
     $scope.To24HourFormat = To24HourFormat;
@@ -45,7 +41,7 @@ app.controller("unitRegController", function($scope) {
     var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
     web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
         .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-        .AddTimeslot(Monday, 1200, 1400, Lecture, 3)
+        .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
         .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
         .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
     $scope.timetable.AddSubject(web);
@@ -67,12 +63,6 @@ app.controller("unitRegController", function($scope) {
 });
 
 $(document).ready(function() {
-
-    // Refresh once first
-    RefreshUIHeight();
-
-    // Set height to fit screen
-    $(window).resize(RefreshUIHeight);
 
     // Initialize datas
     $('div#timetable-container').data('scale', 1);
@@ -115,7 +105,7 @@ $(document).ready(function() {
     });
 
     $('button#btn-print').click(function () {
-        var print = window.open('', 'Timetable');
+        var print = window.open();
 
         print.document.write('<html><head><title>Timetable</title>');
         print.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
@@ -126,21 +116,25 @@ $(document).ready(function() {
         print.document.close(); // necessary for IE >= 10
         print.focus(); // necessary for IE >= 10
 
-        print.print();
-        print.close();
+        // Wait a while for document.write to complete
+        setTimeout(function() {
+            print.print();
+            print.close();
+        }, 100);
     });
 
     $('input.timeslot').change(function() {
         scope.timetable.NotifyChanges();
     });
 
+    $('button#add-subject').click(function() {
+        var scope = angular.element('body').scope();
+        scope.$apply(function () {
+            scope.timetable.AddSubject(scope.newSubject);
+            scope.newSubject = new Subject(scope.timetable, '', '');
+        });
+    });
 });
-
-// UI related functions
-function RefreshUIHeight() {
-    $('.full-height').height(window.innerHeight * 0.9);
-    $('.half-height').height(window.innerHeight * 0.45);
-}
 
 // Functions
 function To24HourFormat(time) {

@@ -10,7 +10,7 @@
 		<link rel="stylesheet" href="bootstrap-3.3.5-dist/css/bootstrap.min.css" type="text/css" />
         <link rel="stylesheet" href="main.css" type="text/css" />
 	</head>
-	<body data-ng-app="unitRegApp" data-ng-controller="unitRegController">
+	<body ng-app="unitRegApp" ng-controller="unitRegController">
 		<div class="full-height container-fluid">
 			<div class="col-sm-12 half-height scrollable-y padding-m">
 				<div id="timetable-container" class="col-sm-11">
@@ -38,11 +38,11 @@
 				</div>
 				<div class="col-sm-1">
 					<button id="zoom-in"class="img-rounded">
-						<span class="glyphicon glyphicon-plus"></span>
+						<span class="glyphicon glyphicon-zoom-in"></span>
 					</button>
 					<br/>
 					<button id="zoom-out" class="img-rounded">
-						<span class="glyphicon glyphicon-minus"></span>
+						<span class="glyphicon glyphicon-zoom-out"></span>
 					</button>
 					<br/>
 					<button id="zoom-reset" class="img-rounded">
@@ -54,27 +54,35 @@
 					</button>
 				</div>
 			</div>
-			<div class="col-sm-12 half-height padding-m">
-				<div class="bottom-left col-sm-6 panel panel-default padding-m scrollable-y">
+			<div class="col-sm-12 half-height">
+				<div class="bottom-left full-height col-sm-6 panel panel-default padding-m scrollable-y">
 					<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
-						<h3> {{ subject.subjectCode }} {{ subject.subjectName}} </h3>
-							<div class="subject col-sm-4" ng-repeat="classtype in subject.timeslots"
-								ng-if="classtype.length > 0">
-								<h4> {{ ClassType[$index] }}</h4>
-								<div ng-repeat="timeslot in classtype track by $index">
-									<label>
-										<input class="timeslot" type="checkbox"
-											   ng-model="timeslot.Tick"
-											   ng-model-options="{ getterSetter: true }" />
-										{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
-									</label>
-									<br/>
-								</div>
+						<h4 class="subject-name"> {{ subject.subjectCode }} {{ subject.subjectName}} </h4>
+						<div class="col-sm-3" ng-repeat="classtype in subject.timeslots"
+							 ng-if="classtype.length > 0">
+							<h5> {{ ClassType[$index] }}</h5>
+							<div ng-repeat="timeslot in classtype track by $index">
+								<label>
+									<input class="timeslot" type="checkbox"
+										   ng-model="timeslot.Tick"
+										   ng-model-options="{ getterSetter: true }" />
+									{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
+								</label>
+								<br/>
 							</div>
+						</div>
 					</div>
 				</div>
-				<div class="bottom-right col-sm-6 panel panel-default padding-m">
-					<h3>Add new Subject</h3>
+				<div class="bottom-right full-height col-sm-6 panel panel-default padding-m">
+					<h4 class="subject-name">
+						<span>Add new Subject</span>
+					</h4>
+					<label class="col-sm-3" for="subject-code">Subject Code</label>
+					<input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
+					<label class="col-sm-3" for="subject-name">Subject Name</label>
+					<input class="col-sm-8" type="text" id="subject-name" name="subject-name" ng-model="newSubject.subjectName" />
+
+					<button id="add-subject" class="pull-right col-sm-3">Add Subject</button>
 				</div>
 			</div>
 		</div>

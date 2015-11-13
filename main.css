@@ -1,9 +1,9 @@
 .full-height {
-    height: 500px;
+    height: 100%;
 }
 
 .half-height {
-    height: 250px;
+    height: 50%;
 }
 
 .scrollable-x {
@@ -40,6 +40,7 @@ table#timetable thead,
 table#timetable tbody tr td:first-child {
     background-color: #efefef;
     cursor: default;
+    font-weight: bold;
 }
 
 table#timetable tbody {
@@ -49,6 +50,7 @@ table#timetable tbody {
 td.has-timeslot {
     padding: 1px;
     background-color: #c7ddef;
+    text-align: center;
 }
 
 .bottom-left {
@@ -56,11 +58,33 @@ td.has-timeslot {
 }
 
 .bottom-right {
-     background-color: #dedef2;
+    background-color: #dedef2;
  }
 
 .subject {
+    height: 100%;
     padding: 5px;
     margin: 5px;
     background-color: #ffffff;
+}
+
+.subject-name {
+    color: #000000;
+    border-bottom: 1px solid #777777;
+}
+
+h5 {
+    font-weight: bold;
+}
+
+input[type='text'] {
+    margin: 5px;
+    padding-left: 5px;
+    padding-right:5px;
+    border-radius: 5px;
+}
+
+button#add-subject {
+    border-radius: 5px;
+    background-color: #eeeeee;
 }
