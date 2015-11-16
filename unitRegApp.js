@@ -36,6 +36,10 @@ app.controller("unitRegController", function($scope) {
     $scope.NotifyChanges = function() {
         $scope.timetable.NotifyChanges();
     };
+    $scope.AddNewSubject = function() {
+        $scope.timetable.AddSubject(scope.newSubject);
+        $scope.newSubject = new Subject(scope.timetable, '', '');
+    };
 
     // Add dummy data
     var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
@@ -125,14 +129,6 @@ $(document).ready(function() {
 
     $('input.timeslot').change(function() {
         scope.timetable.NotifyChanges();
-    });
-
-    $('button#add-subject').click(function() {
-        var scope = angular.element('body').scope();
-        scope.$apply(function () {
-            scope.timetable.AddSubject(scope.newSubject);
-            scope.newSubject = new Subject(scope.timetable, '', '');
-        });
     });
 });
 

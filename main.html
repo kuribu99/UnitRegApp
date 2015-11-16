@@ -60,7 +60,7 @@
 						<h4 class="subject-name">
 							<span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
 							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
-								ng-click="timetable.RemoveSubject(subject)">
+								ng-click="timetable.RemoveSubject()">
 							</button>
 						</h4>
 						<div class="col-sm-3" ng-repeat="classtype in subject.timeslots"
@@ -81,13 +81,21 @@
 				<div class="bottom-right full-height col-sm-6 panel panel-default padding-m">
 					<h4 class="subject-name">
 						<span>Add new Subject</span>
+						<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
+								ng-click="timetable.AddNewSubject()">
+						</button>
 					</h4>
 					<label class="col-sm-3" for="subject-code">Subject Code</label>
 					<input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
 					<label class="col-sm-3" for="subject-name">Subject Name</label>
 					<input class="col-sm-8" type="text" id="subject-name" name="subject-name" ng-model="newSubject.subjectName" />
-
-					<button id="add-subject" class="pull-right col-sm-3">Add Subject</button>
+					<label class="col-sm-12">Timeslots</label>
+					<select class="col-sm-3">
+						<option ng-repeat="classType in ClassType track by $index"
+							value="{{ $index }}">
+							{{classType}}
+						</option>
+					</select>
 				</div>
 			</div>
 		</div>
