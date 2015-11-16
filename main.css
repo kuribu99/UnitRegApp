@@ -88,3 +88,9 @@ button#add-subject {
     border-radius: 5px;
     background-color: #eeeeee;
 }
+
+.btn-inline {
+    margin: 5px;
+    display:inline-block;
+    vertical-align:middle;
+}

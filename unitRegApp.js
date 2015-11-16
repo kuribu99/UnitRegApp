@@ -269,6 +269,22 @@ function Timetable() {
 
         this.timeGaps.sort(SortTime);
 
+        this.NotifyChanges();
+        return this;
+    };
+
+    this.RemoveSubject = function(subject) {
+        if(confirm('Are you sure to delete this subject?')) {
+            subject.timeslots.forEach(function(timeslotByClassTypes) {
+                timeslotByClassTypes.forEach(function(timeslot) {
+                    this.timetableDays[timeslot.timetableDay].RemoveTimeslot(timeslot);
+                }, this);
+            }, this);
+
+            var index = this.subjects.indexOf(subject);
+            this.subjects.splice(index, 1);
+            this.NotifyChanges();
+        }
         return this;
     };
 
@@ -318,6 +334,12 @@ function TimetableDay(timetable, day) {
 
     this.AddTimeslot = function(timeslot) {
         this.timeslots.push(timeslot);
+        return this;
+    };
+
+    this.RemoveTimeslot = function(timeslot) {
+        var index = this.timeslots.indexOf(timeslot);
+        this.timeslots.splice(index, 1);
         return this;
     };
 

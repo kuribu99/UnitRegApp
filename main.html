@@ -57,7 +57,12 @@
 			<div class="col-sm-12 half-height">
 				<div class="bottom-left full-height col-sm-6 panel panel-default padding-m scrollable-y">
 					<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
-						<h4 class="subject-name"> {{ subject.subjectCode }} {{ subject.subjectName}} </h4>
+						<h4 class="subject-name">
+							<span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
+							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
+								ng-click="timetable.RemoveSubject(subject)">
+							</button>
+						</h4>
 						<div class="col-sm-3" ng-repeat="classtype in subject.timeslots"
 							 ng-if="classtype.length > 0">
 							<h5> {{ ClassType[$index] }}</h5>
