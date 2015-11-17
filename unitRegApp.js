@@ -30,18 +30,33 @@ app.controller("unitRegController", function($scope) {
     $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
     $scope.newSubject = new Subject($scope.timetable, '', '');
+    $scope.newTimeslots = [];
 
     // Methods
     $scope.To24HourFormat = To24HourFormat;
-    $scope.NotifyChanges = function() {
+
+    $scope.NotifyChanges = function () {
         $scope.timetable.NotifyChanges();
     };
-    $scope.AddNewSubject = function() {
-        $scope.timetable.AddSubject(scope.newSubject);
-        $scope.newSubject = new Subject(scope.timetable, '', '');
+
+    $scope.AddNewSubject = function () {
+        $scope.newTimeslots.forEach(function(timeslot) {
+            this.newSubject.AddTimeslot(timeslot.timetableDay, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
+        }, $scope);
+
+        $scope.timetable.AddSubject($scope.newSubject);
+        $scope.newSubject = new Subject($scope.timetable, '', '');
+        while($scope.newTimeslots.length > 0)
+            $scope.newTimeslots.pop();
+    };
+
+    $scope.AddNewTimeslot = function () {
+        $scope.newTimeslots.push(new Timeslot(Monday, 800, 1000, $scope.newSubject, Lecture, 1));
     };
 
     // Add dummy data
+    {
+
     var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
     web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
         .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
@@ -61,9 +76,9 @@ app.controller("unitRegController", function($scope) {
     tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
         .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
     $scope.timetable.AddSubject(tp);
+    }
 
     $scope.NotifyChanges();
-
 });
 
 $(document).ready(function() {
@@ -125,10 +140,6 @@ $(document).ready(function() {
             print.print();
             print.close();
         }, 100);
-    });
-
-    $('input.timeslot').change(function() {
-        scope.timetable.NotifyChanges();
     });
 });
 
@@ -343,7 +354,6 @@ function TimetableDay(timetable, day) {
         var result = false;
         this.timeslots.forEach(function(timeslot) {
             if(timeslot.startTime == startTime && timeslot.ticked) {
-                console.log(timeslot);
                 result = timeslot;
             }
         }, this);

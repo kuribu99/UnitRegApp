@@ -68,7 +68,7 @@ td.has-timeslot {
     background-color: #ffffff;
 }
 
-.subject-name {
+.title {
     color: #000000;
     border-bottom: 1px solid #777777;
 }
@@ -93,4 +93,9 @@ button#add-subject {
     margin: 5px;
     display:inline-block;
     vertical-align:middle;
+}
+
+select {
+    padding-top: 5px;
+    padding-bottom:5px;
 }
