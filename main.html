@@ -58,10 +58,23 @@
 				<div class="bottom-left full-height col-sm-6 panel panel-default padding-m scrollable-y">
 					<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
 						<h4 class="title">
-							<span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
 							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
 								ng-click="timetable.RemoveSubject(subject)">
 							</button>
+							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up"
+									ng-if="$index > 0"
+									ng-click="timetable.IncreaseSubjectPriority(subject)">
+							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up btn-disabled"
+									ng-if="$index == 0" disabled>
+							</button>
+							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down"
+									ng-if="$index < timetable.subjects.length - 1"
+									ng-click="timetable.DecreaseSubjectPriority(subject)">
+							</button>
+							<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down btn-disabled"
+									ng-if="$index >= timetable.subjects.length - 1" disabled>
+							</button>
+							<span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
 						</h4>
 						<div class="col-sm-3" ng-repeat="classtype in subject.timeslots"
 							 ng-if="classtype.length > 0">
@@ -79,34 +92,50 @@
 					</div>
 				</div>
 				<div class="bottom-right full-height col-sm-6 panel panel-default padding-m">
-					<h4 class="title">
+					<h4 class="title col-sm-12">
 						<span>Add new Subject</span>
 						<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
 								ng-click="AddNewSubject()">
 						</button>
 					</h4>
-					<label class="col-sm-3" for="subject-code">Subject Code</label>
-					<input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
-					<label class="col-sm-3" for="title">Subject Name</label>
-					<input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
-					<h4 class=" col-sm-12 title">
+					<div class="col-sm-12">
+						<label class="col-sm-3" for="subject-code">Subject Code</label>
+						<input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
+						<label class="col-sm-3" for="title">Subject Name</label>
+						<input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
+					</div>
+					<h4 class="title col-sm-12">
 						<span>Add Timeslot</span>
 						<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
 								ng-click="AddNewTimeslot()">
 						</button>
 					</h4>
-					<div ng-repeat="timeslot in newTimeslots">
-						<select class="col-sm-3 btn btn-default" ng-model="timeslot.classType">
-							<option ng-repeat="classType in ClassType track by $index"
-									value="{{ $index }}"> {{ classType }} </option>
-						</select>
-						<input type="number" ng-model="timeslot.number" min="1"/>
-						<select class="col-sm-3 btn btn-default" ng-model="timeslot.day">
-							<option ng-repeat="day in DayInWeek track by $index"
-								value="{{ $index }}"> {{ day }} </option>
-						</select>
-						<input type="number" ng-model="timeslot.startTime" min="800" max="1800" />
-						<input type="number" ng-model="timeslot.endTime" min="800" max="1800" />
+					<div class="col-sm-12" ng-repeat="timeslot in newTimeslots track by $index">
+						<div class="col-sm-2 timeslot-title">
+							<h3>{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}</h3>
+						</div>
+						<div class="right col-sm-9">
+							<div class="col-sm-12">
+								<select class="col-sm-4 btn btn-default" ng-model="timeslot.day">
+									<option ng-repeat="day in DayInWeek track by $index"
+											value="{{ $index }}"> {{ day }} </option>
+								</select>
+								<select class="col-sm-4 btn btn-default" ng-model="timeslot.classType">
+									<option ng-repeat="classType in ClassType track by $index"
+											value="{{ $index }}"> {{ classType }} </option>
+								</select>
+								<input class="col-sm-2 input-number" type="number" ng-model="timeslot.number" min="1"/>
+							</div>
+							<div class="col-sm-10 margin-m">
+								<label class="col-sm-2 lbl" for="start-time-{{$index}}"> From </label>
+								<input class="col-sm-3" id="start-time-{{$index}}" type="number" ng-model="timeslot.startTime" min="800" max="1800" />
+								<label class="col-sm-1 lbl" for="end-time-{{$index}}"> to </label>
+								<input class="col-sm-3" id="end-time-{{$index}}" type="number" ng-model="timeslot.endTime" min="800" max="1800" />
+							</div>
+						</div>
+						<button class=" btn-div img-responsive img-rounded glyphicon glyphicon-remove-sign"
+								ng-click="RemoveNewTimeslot(timeslot)">
+						</button>
 					</div>
 				</div>
 			</div>

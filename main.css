@@ -90,7 +90,7 @@ button#add-subject {
 }
 
 .btn-inline {
-    margin: 5px;
+    margin-bottom: 5px;
     display:inline-block;
     vertical-align:middle;
 }
@@ -98,4 +98,30 @@ button#add-subject {
 select {
     padding-top: 5px;
     padding-bottom:5px;
+}
+
+.btn-disabled {
+    color: rgba(64, 64, 64, 0.5);
+}
+
+.input-number {
+    padding-top: 4px;
+    padding-bottom:4px;
+}
+
+.lbl {
+    padding-top: 5px;
+    text-align: center;
+}
+
+.timeslot-title {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #777777;
+}
+
+.btn-div {
+    margin-bottom: 5px;
+    padding: 5px;
+    vertical-align:middle;
 }

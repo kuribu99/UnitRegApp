@@ -40,18 +40,40 @@ app.controller("unitRegController", function($scope) {
     };
 
     $scope.AddNewSubject = function () {
+        if($scope.newSubject.subjectCode.length == 0) {
+            alert('Please enter subject code');
+            return;
+        }
+        if($scope.newSubject.subjectName.length == 0) {
+            alert('Please enter subject name');
+            return;
+        }
+        if($scope.newTimeslots.length == 0) {
+            alert('Please add at least one timeslot');
+            return;
+        }
+
         $scope.newTimeslots.forEach(function(timeslot) {
             this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
         }, $scope);
 
         $scope.timetable.AddSubject($scope.newSubject);
+
         $scope.newSubject = new Subject($scope.timetable, '', '');
         while($scope.newTimeslots.length > 0)
             $scope.newTimeslots.pop();
+
+        // Add at least one timeslot for the new subject
+        $scope.AddNewTimeslot();
     };
 
     $scope.AddNewTimeslot = function () {
         $scope.newTimeslots.push(new Timeslot(Monday, 800, 1000, $scope.newSubject, Lecture, 1));
+    };
+
+    $scope.RemoveNewTimeslot = function (timeslot) {
+        var index = this.newTimeslots.indexOf(timeslot);
+        this.newTimeslots.splice(index, 1);
     };
 
     // Add dummy data
@@ -77,6 +99,9 @@ app.controller("unitRegController", function($scope) {
         .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
     $scope.timetable.AddSubject(tp);
     }
+
+    // Add at least one timeslot for the new subject
+    $scope.AddNewTimeslot();
 
     $scope.NotifyChanges();
 });
@@ -163,7 +188,7 @@ function Subject(timetable, subjectCode, subjectName) {
     this.subjectName = subjectName;
     this.timeslots = [];
 
-    for(var i in ClassType)
+    for(var i = 0; i< ClassType.length; i++)
         this.timeslots.push([]);
 
     // Methods
@@ -244,14 +269,12 @@ function Timetable() {
     };
 
     this.InitializeTimeGaps = function() {
-
         this.timetableDays.forEach(function(timetableDay) {
             timetableDay.timeslots.forEach(function(timeslot){
                 if(timeslot.ticked)
                     this.AddTimeslot(timeslot);
             }, this);
         }, this);
-
         return this;
     };
 
@@ -306,6 +329,23 @@ function Timetable() {
         return this.timetableDays[timeslot.day].HasClash(timeslot);
     };
 
+    this.IncreaseSubjectPriority = function (subject) {
+        var index = this.subjects.indexOf(subject);
+        if(index > 0 && this.subjects.length > 1 && index < this.subjects.length - 1) {
+            var temp = this.subjects[index - 1];
+            this.subjects[index - 1] = subject;
+            this.subjects[index] = temp;
+        }
+    };
+
+    this.DecreaseSubjectPriority = function (subject) {
+        var index = this.subjects.indexOf(subject);
+        if(index < this.subjects.length - 1 && this.subjects.length > 1) {
+            var temp = this.subjects[index + 1];
+            this.subjects[index + 1] = subject;
+            this.subjects[index] = temp;
+        }
+    };
 }
 
 function TimetableDay(timetable, day) {
