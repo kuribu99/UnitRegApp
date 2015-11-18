@@ -101,12 +101,12 @@
 									value="{{ $index }}"> {{ classType }} </option>
 						</select>
 						<input type="number" ng-model="timeslot.number" min="1"/>
-						<select class="col-sm-3 btn btn-default" ng-model="timeslot.timetableDay.day">
+						<select class="col-sm-3 btn btn-default" ng-model="timeslot.day">
 							<option ng-repeat="day in DayInWeek track by $index"
 								value="{{ $index }}"> {{ day }} </option>
 						</select>
 						<input type="number" ng-model="timeslot.startTime" min="800" max="1800" />
-						<input type="number" ng-model="timeslot.EndTime" min="800" max="1800" />
+						<input type="number" ng-model="timeslot.endTime" min="800" max="1800" />
 					</div>
 				</div>
 			</div>

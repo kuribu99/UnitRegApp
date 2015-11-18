@@ -41,7 +41,7 @@ app.controller("unitRegController", function($scope) {
 
     $scope.AddNewSubject = function () {
         $scope.newTimeslots.forEach(function(timeslot) {
-            this.newSubject.AddTimeslot(timeslot.timetableDay, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
+            this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
         }, $scope);
 
         $scope.timetable.AddSubject($scope.newSubject);
@@ -167,8 +167,8 @@ function Subject(timetable, subjectCode, subjectName) {
         this.timeslots.push([]);
 
     // Methods
-    this.AddTimeslot = function (timetableDay, startTime, endTime, classType, number) {
-        var timeslot = new Timeslot(timetableDay, startTime, endTime, this, classType, number);
+    this.AddTimeslot = function (day, startTime, endTime, classType, number) {
+        var timeslot = new Timeslot(day, startTime, endTime, this, classType, number);
         this.timeslots[classType].push(timeslot);
         return this;
     };
@@ -270,7 +270,7 @@ function Timetable() {
         this.subjects.push(subject);
         subject.timeslots.forEach(function(timeslotByClassTypes) {
             timeslotByClassTypes.forEach(function(timeslot) {
-                this.timetableDays[timeslot.timetableDay].AddTimeslot(timeslot);
+                this.timetableDays[timeslot.day].AddTimeslot(timeslot);
             }, this);
         }, this);
 
@@ -284,7 +284,7 @@ function Timetable() {
         if(confirm('Are you sure to delete this subject?')) {
             subject.timeslots.forEach(function(timeslotByClassTypes) {
                 timeslotByClassTypes.forEach(function(timeslot) {
-                    this.timetableDays[timeslot.timetableDay].RemoveTimeslot(timeslot);
+                    this.timetableDays[timeslot.day].RemoveTimeslot(timeslot);
                 }, this);
             }, this);
 
@@ -303,7 +303,7 @@ function Timetable() {
 
     this.HasClash = function(timeslot) {
         // Only need to check the particular day
-        return this.timetableDays[timeslot.timetableDay].HasClash(timeslot);
+        return this.timetableDays[timeslot.day].HasClash(timeslot);
     };
 
 }
@@ -400,10 +400,10 @@ function TimetableDay(timetable, day) {
 
 }
 
-function Timeslot(timetableDay, startTime, endTime, subject, classType, number) {
+function Timeslot(day, startTime, endTime, subject, classType, number) {
 
     // Constructor
-    this.timetableDay = timetableDay;
+    this.day = day;
     this.startTime = startTime;
     this.endTime = endTime;
     this.subject = subject;
