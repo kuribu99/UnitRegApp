@@ -22,6 +22,9 @@ const Lecture = 0;
 const Tutorial = 1;
 const Practical = 2;
 
+// Cookie timeout period is 1 month
+const CookieTimeout = 60 * 60 * 24 * 30;
+
 // Controller
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
@@ -76,7 +79,26 @@ app.controller("unitRegController", function($scope) {
         this.newTimeslots.splice(index, 1);
     };
 
+    $scope.ParseSubject = function(json) {
+        var subject = null;
+        try {
+            var data = JSON.parse(json);
+            subject = new Subject($scope.timetable, data.subjectCode, data.subjectName);
+
+            data.timeslots.forEach(function(timeslot) {
+                subject.AddTimeslot(timeslot.day,
+                    timeslot.startTime,
+                    timeslot.endTime,
+                    timeslot.classType,
+                    timeslot.number);
+            });
+        } catch(e) {}
+        return subject;
+    };
+
     // Add dummy data
+    var AddDummyData = false;
+    if(AddDummyData)
     {
 
     var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
@@ -100,9 +122,19 @@ app.controller("unitRegController", function($scope) {
     $scope.timetable.AddSubject(tp);
     }
 
+    // Read subjects from cookie
+    var cookieData = document.cookie.split(';');
+    cookieData.forEach(function(json) {
+        if(json && json.length > 0) {
+            var subjectJson = json.substr(json.indexOf('=') + 1);
+            $scope.timetable.AddSubject($scope.ParseSubject(subjectJson));
+        }
+    });
+
     // Add at least one timeslot for the new subject
     $scope.AddNewTimeslot();
 
+    // Update the changes
     $scope.NotifyChanges();
 });
 
@@ -171,8 +203,8 @@ $(document).ready(function() {
 // Functions
 function To24HourFormat(time) {
     return time >= 1000? time:
-        time >= 100? new String(0).concat(time):
-            new String(0).concat(new String(0)).concat(time);
+        time >= 100? '0'.concat(time):
+           '00'.concat(time);
 }
 
 function SortTime(timeA, timeB) {
@@ -220,6 +252,23 @@ function Subject(timetable, subjectCode, subjectName) {
 
     this.GetDetails = function() {
         return this.subjectCode.concat(' ').concat(this.subjectName);
+    };
+
+    this.ToJSON = function() {
+        var json =  '{'
+            + '"subjectCode":"' + this.subjectCode + '",'
+            + '"subjectName":"' + this.subjectName + '",'
+            + '"timeslots":[';
+        this.timeslots.forEach(function (timeslotByClassType) {
+            timeslotByClassType.forEach(function(timeslot) {
+                json += timeslot.ToJSON() + ',';
+            });
+        });
+        if(json.charAt(json.length - 1) == ',')
+            json = json.substr(0, json.length - 1);
+        json += ']';
+        json += '}';
+        return json;
     };
 }
 
@@ -297,10 +346,23 @@ function Timetable() {
             }, this);
         }, this);
 
-        this.timeGaps.sort(SortTime);
+        this.AddSubjectToCookie(subject);
 
         this.NotifyChanges();
         return this;
+    };
+
+    this.AddSubjectToCookie = function(subject) {
+        var expireDate = new Date();
+        expireDate.setTime(expireDate.getTime() + CookieTimeout);
+
+        document.cookie = subject.subjectCode + '='
+            + subject.ToJSON() + ';'
+            + 'expires=' + expireDate.toUTCString();
+    };
+
+    this.RemoveSubjectFromCookie = function(subject) {
+        document.cookie = subject.subjectCode + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     };
 
     this.RemoveSubject = function(subject) {
@@ -313,6 +375,7 @@ function Timetable() {
 
             var index = this.subjects.indexOf(subject);
             this.subjects.splice(index, 1);
+            this.RemoveSubjectFromCookie(subject);
             this.NotifyChanges();
         }
         return this;
@@ -331,7 +394,7 @@ function Timetable() {
 
     this.IncreaseSubjectPriority = function (subject) {
         var index = this.subjects.indexOf(subject);
-        if(index > 0 && this.subjects.length > 1 && index < this.subjects.length - 1) {
+        if(index > 0 && this.subjects.length > 1 && index < this.subjects.length) {
             var temp = this.subjects[index - 1];
             this.subjects[index - 1] = subject;
             this.subjects[index] = temp;
@@ -364,17 +427,14 @@ function TimetableDay(timetable, day) {
 
     this.HasClash = function(timeslot) {
         this.timeslots.forEach(function (otherTimeslot) {
+            var sameSubject = timeslot.subject == otherTimeslot.subject;
+            var differentClassType = timeslot.classType != otherTimeslot.classType;
+            var hasClash = timeslot.ClashWith(otherTimeslot) || otherTimeslot.ClashWith(timeslot);
+            var otherIsTicked = otherTimeslot.ticked;
 
-            // Same subject but is not same type of class considers clashes
-            if(timeslot.subjectCode == otherTimeslot.subjectCode)
-                if(timeslot.classType != otherTimeslot.classType)
-                    if (otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
-                        throw otherTimeslot;
-
-            else if(otherTimeslot.ticked && timeslot.ClashWith(otherTimeslot))
+            if((sameSubject? differentClassType: true) && hasClash && otherIsTicked)
                 throw otherTimeslot;
-
-        }, this);
+        });
 
         return false;
     };
@@ -437,7 +497,6 @@ function TimetableDay(timetable, day) {
         }
         return this.arrangedTimeslots
     };
-
 }
 
 function Timeslot(day, startTime, endTime, subject, classType, number) {
@@ -453,22 +512,20 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
 
     // Methods
     this.ClashWith = function(otherTimeslot) {
-
-        // TODO: verify
         var startTimeDifference = this.startTime - otherTimeslot.startTime;
 
         if(startTimeDifference == 0)
             return true;
 
         // This timeslot is later than other class
-        // If this timeslot starts before other timeslot ends, then it has clashes
+        // If this timeslot starts before other timeslot ends, it has clashes
         else if (startTimeDifference > 0)
-            return this.startTime - otherTimeslot.endTime < 0;
+            return this.startTime < otherTimeslot.endTime
 
         // This timeslot is earlier than other timeslot
-        // If this timeslot ends after other timeslot, then it has clashes
+        // If other timeslot have not end when this timeslot starts, it has clashes
         else
-            return this.endTime - otherTimeslot.startTime > 0;
+            return this.endTime > otherTimeslot.startTime;
     };
 
     this.Tick = function(tick) {
@@ -488,6 +545,16 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
         return this.subject.GetDetails()
             .concat(' ')
             .concat(ClassType[classType].charAt(0)).concat(number);
+    };
+
+    this.ToJSON = function() {
+        return '{'
+            + '"day":' + this.day + ','
+            + '"startTime":' + this.startTime + ','
+            + '"endTime":' + this.endTime + ','
+            + '"classType":' + this.classType + ','
+            + '"number":' + this.number
+            + '}';
     };
 }
 

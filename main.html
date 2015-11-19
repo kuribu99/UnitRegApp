@@ -93,10 +93,10 @@
 				</div>
 				<div class="bottom-right full-height col-sm-6 panel panel-default padding-m">
 					<h4 class="title col-sm-12">
-						<span>Add new Subject</span>
 						<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
 								ng-click="AddNewSubject()">
 						</button>
+						<span >Add new Subject</span>
 					</h4>
 					<div class="col-sm-12">
 						<label class="col-sm-3" for="subject-code">Subject Code</label>
@@ -105,10 +105,10 @@
 						<input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
 					</div>
 					<h4 class="title col-sm-12">
-						<span>Add Timeslot</span>
 						<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
 								ng-click="AddNewTimeslot()">
 						</button>
+						<span>Add Timeslot</span>
 					</h4>
 					<div class="col-sm-12" ng-repeat="timeslot in newTimeslots track by $index">
 						<div class="col-sm-2 timeslot-title">
