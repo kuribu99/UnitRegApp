@@ -136,6 +136,11 @@ app.controller("unitRegController", function($scope) {
 
     // Update the changes
     $scope.NotifyChanges();
+
+
+
+    var auto = new AutomaticUnitReg($scope.timetable);
+    auto.GenerateTimetable();
 });
 
 $(document).ready(function() {
@@ -231,28 +236,27 @@ function Subject(timetable, subjectCode, subjectName) {
     };
 
     this.Tick = function(timeslot) {
-
-        try {
-            if(!this.timetable.HasClash(timeslot)) {
-                this.timeslots[timeslot.classType].forEach(function (otherTimeslot) {
-                    otherTimeslot.ticked = false;
-                });
-                timeslot.ticked = true;
-                this.timetable.NotifyChanges();
-            }
+        if(!this.timetable.HasClash(timeslot)) {
+            this.timeslots[timeslot.classType].forEach(function (otherTimeslot) {
+                otherTimeslot.ticked = false;
+            });
+            timeslot.ticked = true;
+            this.timetable.NotifyChanges();
         }
-        catch (timeslot) {
-            alert('Unable to tick this timeslot. Has clashes with:\n'
-                + timeslot.subject.subjectCode + ' ' + timeslot.subject.subjectName + ' '
-                + ClassType[timeslot.classType].charAt(0) + timeslot.number);
-        }
-
         return this;
     };
 
     this.GetDetails = function() {
         return this.subjectCode.concat(' ').concat(this.subjectName);
     };
+
+    this.Reset = function() {
+        this.timeslots.forEach(function(timeslotByClassType) {
+            timeslotByClassType.forEach(function(timeslot) {
+                timeslot.ticked = false;
+            });
+        });
+    }
 
     this.ToJSON = function() {
         var json =  '{'
@@ -409,6 +413,13 @@ function Timetable() {
             this.subjects[index] = temp;
         }
     };
+
+    this.Reset = function() {
+        this.subjects.forEach(function(subject) {
+            subject.Reset();
+        });
+        this.NotifyChanges();
+    }
 }
 
 function TimetableDay(timetable, day) {
@@ -532,14 +543,30 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
         if(arguments.length == 0) {
             return this.ticked;
         } else {
-            if(tick)
-                this.subject.Tick(this);
+            if(tick) {
+                try {
+                    this.subject.Tick(this);
+                }
+                catch (timeslot) {
+                    alert('Unable to tick this timeslot. Has clashes with:\n'
+                        + timeslot.subject.subjectCode + ' ' + timeslot.subject.subjectName + ' '
+                        + ClassType[timeslot.classType].charAt(0) + timeslot.number);
+                }
+            }
             else {
                 this.ticked = false;
                 this.subject.timetable.NotifyChanges();
             }
         }
     };
+
+    this.TryTick = function(tick) {
+        if(tick) {
+            this.subject.Tick(this);
+        } else {
+            this.ticked = false;
+        }
+    }
 
     this.GetDetails = function() {
         return this.subject.GetDetails()
@@ -569,4 +596,82 @@ function TimeGap(colSpan, timeslot) {
         if(!this.timeslot) return "";
         else return this.timeslot.GetDetails();
     };
+}
+
+function AutomaticUnitReg(timetable) {
+
+    // Constructor
+    this.timetable = timetable;
+    this.subjects = timetable.subjects;
+
+    // Methods
+    this.GenerateTimetable = function() {
+        // TODO: Generate timetable
+
+
+        var possibleCombinations = this.PossibleCombinations();
+        var attemptedCombinations = 0;
+
+        var lectures, tutorials, practicals;
+
+        this.timetable.Reset();
+
+        // Tick one subject by one subject
+        this.subjects.forEach(function(subject) {
+            lectures = subject.timeslots[Lecture];
+            tutorials = subject.timeslots[Tutorial];
+            practicals = subject.timeslots[Practical];
+
+            // Tick all those which has only one timeslot first
+            if(lectures.length == 1) {
+                try {
+                    lectures[0].Tick();
+                } catch (e) {
+                }
+            }
+        });
+        attemptedCombinations++;
+
+        alert('There are ' + possibleCombinations + ' possible combinations!');
+
+        this.subjects[0].timeslots[0][0].TryTick(true);
+        this.subjects[0].timeslots[1][0].TryTick(true);
+        this.timetable.NotifyChanges();
+    };
+
+    this.ClassTypeCompleted = function (timeslotByClassType) {
+        var completed = false;
+        timeslotByClassType.forEach(function(timeslot) {
+            completed |= timeslot.ticked;
+        });
+        return completed;
+    }
+
+    this.SubjectCompleted = function (subject) {
+        var completed = false;
+        subject.timeslots.forEach(function(timeslotByClassType) {
+            if(timeslotByClassType.length > 0)
+                completed |= this.ClassTypeCompleted(timeslotByClassType);
+        });
+        return completed;
+    }
+    
+    this.AllSubjectsCompleted = function (subjects) {
+        var completed = false;
+        subjects.forEach(function(subject) {
+            completed |= this.SubjectCompleted(subject);
+        });
+        return completed;
+    }
+
+    this.PossibleCombinations = function() {
+        var combinations = 1;
+        this.subjects.forEach(function(subject) {
+            subject.timeslots.forEach(function(timeslotsByClassType) {
+                if(timeslotsByClassType.length > 1)
+                    combinations *= timeslotsByClassType.length;
+            });
+        });
+        return combinations;
+    }
 }
