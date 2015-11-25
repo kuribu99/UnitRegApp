@@ -96,30 +96,27 @@ app.controller("unitRegController", function($scope) {
         return subject;
     };
 
-    // Add dummy data
-    var AddDummyData = false;
-    if(AddDummyData)
-    {
+    // Add dummy data function
+    $scope.AddDummyData = function() {
+        var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development (Dummy Data)');
+        web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
+            .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
+            .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
+            .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
+            .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
+        $scope.timetable.AddSubject(web);
 
-    var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development');
-    web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
-        .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-        .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
-        .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
-        .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
-    $scope.timetable.AddSubject(web);
+        var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I (Dummy Data)');
+        fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
+            .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
+            .AddTimeslot(Friday, 830, 1030, Practical, 1)
+            .AddTimeslot(Friday, 1430, 1630, Practical, 2);
+        $scope.timetable.AddSubject(fyp);
 
-    var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I');
-    fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
-        .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
-        .AddTimeslot(Friday, 830, 1030, Practical, 1)
-        .AddTimeslot(Friday, 1430, 1630, Practical, 2);
-    $scope.timetable.AddSubject(fyp);
-
-    var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project');
-    tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
-        .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
-    $scope.timetable.AddSubject(tp);
+        var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project (Dummy Data)');
+        tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
+            .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
+        $scope.timetable.AddSubject(tp);
     }
 
     // Read subjects from cookie
@@ -134,16 +131,14 @@ app.controller("unitRegController", function($scope) {
 		}
     });
 
+    if($scope.timetable.subjects.length == 0)
+        $scope.AddDummyData();
+
     // Add at least one timeslot for the new subject
     $scope.AddNewTimeslot();
 
     // Update the changes
     $scope.NotifyChanges();
-
-
-
-    var auto = new AutomaticUnitReg($scope.timetable);
-    auto.GenerateTimetable();
 });
 
 $(document).ready(function() {
@@ -599,82 +594,4 @@ function TimeGap(colSpan, timeslot) {
         if(!this.timeslot) return "";
         else return this.timeslot.GetDetails();
     };
-}
-
-function AutomaticUnitReg(timetable) {
-
-    // Constructor
-    this.timetable = timetable;
-    this.subjects = timetable.subjects;
-
-    // Methods
-    this.GenerateTimetable = function() {
-        // TODO: Generate timetable
-
-
-        var possibleCombinations = this.PossibleCombinations();
-        var attemptedCombinations = 0;
-
-        var lectures, tutorials, practicals;
-
-        this.timetable.Reset();
-
-        // Tick one subject by one subject
-        this.subjects.forEach(function(subject) {
-            lectures = subject.timeslots[Lecture];
-            tutorials = subject.timeslots[Tutorial];
-            practicals = subject.timeslots[Practical];
-
-            // Tick all those which has only one timeslot first
-            if(lectures.length == 1) {
-                try {
-                    lectures[0].Tick();
-                } catch (e) {
-                }
-            }
-        });
-        attemptedCombinations++;
-
-        alert('There are ' + possibleCombinations + ' possible combinations!');
-
-        this.subjects[0].timeslots[0][0].TryTick(true);
-        this.subjects[0].timeslots[1][0].TryTick(true);
-        this.timetable.NotifyChanges();
-    };
-
-    this.ClassTypeCompleted = function (timeslotByClassType) {
-        var completed = false;
-        timeslotByClassType.forEach(function(timeslot) {
-            completed |= timeslot.ticked;
-        });
-        return completed;
-    }
-
-    this.SubjectCompleted = function (subject) {
-        var completed = false;
-        subject.timeslots.forEach(function(timeslotByClassType) {
-            if(timeslotByClassType.length > 0)
-                completed |= this.ClassTypeCompleted(timeslotByClassType);
-        });
-        return completed;
-    }
-    
-    this.AllSubjectsCompleted = function (subjects) {
-        var completed = false;
-        subjects.forEach(function(subject) {
-            completed |= this.SubjectCompleted(subject);
-        });
-        return completed;
-    }
-
-    this.PossibleCombinations = function() {
-        var combinations = 1;
-        this.subjects.forEach(function(subject) {
-            subject.timeslots.forEach(function(timeslotsByClassType) {
-                if(timeslotsByClassType.length > 1)
-                    combinations *= timeslotsByClassType.length;
-            });
-        });
-        return combinations;
-    }
 }
