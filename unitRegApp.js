@@ -127,8 +127,11 @@ app.controller("unitRegController", function($scope) {
     cookieData.forEach(function(json) {
         if(json && json.length > 0) {
             var subjectJson = json.substr(json.indexOf('=') + 1);
-            $scope.timetable.AddSubject($scope.ParseSubject(subjectJson));
-        }
+
+            // Verify that this cookie is subject data
+			if(subjectJson && subjectJson.length > 0 && subjectJson.indexOf('SubjectData:') > 0)
+				$scope.timetable.AddSubject($scope.ParseSubject(subjectJson.substr(subjectJson.indexOf(':') + 1)));
+		}
     });
 
     // Add at least one timeslot for the new subject
@@ -356,7 +359,7 @@ function Timetable() {
         var expireDate = new Date();
         expireDate.setTime(expireDate.getTime() + CookieTimeout);
 
-        document.cookie = subject.subjectCode + '='
+        document.cookie = 'SubjectData:' + subject.subjectCode + '='
             + subject.ToJSON() + ';'
             + 'expires=' + expireDate.toUTCString();
     };
