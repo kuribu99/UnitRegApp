@@ -43,31 +43,87 @@ app.controller("unitRegController", function($scope) {
     };
 
     $scope.AddNewSubject = function () {
+        var hasError = false;
+        var errorMsg = 'Please validate the following:\n';
+
+        // Validation
         if($scope.newSubject.subjectCode.length == 0) {
-            alert('Please enter subject code');
-            return;
+            errorMsg += 'Subject code cannot be empty\n';
+            hasError = true;
         }
         if($scope.newSubject.subjectName.length == 0) {
-            alert('Please enter subject name');
-            return;
+            errorMsg += 'Subject name cannot be empty\n';
+            hasError = true;
         }
         if($scope.newTimeslots.length == 0) {
-            alert('Please add at least one timeslot');
-            return;
+            errorMsg += 'At least one timeslot is required\n';
+            hasError = true;
+        }
+        else {
+            var arr = [];
+            $scope.newTimeslots.forEach(function (timeslot) {
+                var number;
+                try {
+                    if(timeslot.number.length == 0)
+                        throw false;
+                    number = parseInt(timeslot.number);
+                }
+                catch(e) {
+                    number = -1;
+                }
+
+                if (number <= 0) {
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number\n';
+                    hasError = true;
+                }
+
+                if(!ValidTime(timeslot.startTime)) {
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot start time\n';
+                    hasError = true;
+                }
+                if(!ValidTime(timeslot.endTime)) {
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot end time\n';
+                    hasError = true;
+                }
+                if(timeslot.startTime > timeslot.endTime) {
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Start time cannot be later than end time\n';
+                    hasError = true;
+                }
+
+                // Add timeslot number for next validation
+                if(number > 0)
+                    arr.push(ClassType[timeslot.classType].charAt(0) + number);
+            }, $scope);
+
+            var item;
+            var hasDuplicate = [];  // To prevent repeating validation
+            while (arr.length > 1) {
+                item = arr.pop();
+                if(arr.indexOf(item) >= 0 && hasDuplicate.indexOf(item) < 0) {
+                    errorMsg += 'Duplicate timeslot; ' + item + '\n';
+                    hasError = true;
+                    hasDuplicate.push(item);
+                }
+            }
         }
 
-        $scope.newTimeslots.forEach(function(timeslot) {
-            this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
-        }, $scope);
+        if(hasError) {
+            alert(errorMsg);
+        }
+        else {
+            $scope.newTimeslots.forEach(function (timeslot) {
+                this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
+            }, $scope);
 
-        $scope.timetable.AddSubject($scope.newSubject);
+            $scope.timetable.AddSubject($scope.newSubject);
 
-        $scope.newSubject = new Subject($scope.timetable, '', '');
-        while($scope.newTimeslots.length > 0)
-            $scope.newTimeslots.pop();
+            $scope.newSubject = new Subject($scope.timetable, '', '');
+            while ($scope.newTimeslots.length > 0)
+                $scope.newTimeslots.pop();
 
-        // Add at least one timeslot for the new subject
-        $scope.AddNewTimeslot();
+            // Add at least one timeslot for the new subject
+            $scope.AddNewTimeslot();
+        }
     };
 
     $scope.AddNewTimeslot = function () {
@@ -98,41 +154,46 @@ app.controller("unitRegController", function($scope) {
 
     // Add dummy data function
     $scope.AddDummyData = function() {
-        var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development (Dummy Data)');
-        web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
-            .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-            .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
-            .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
-            .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
-        $scope.timetable.AddSubject(web);
+        if(confirm('This will add 3 dummy subjects, proceed?')) {
+            var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development (Dummy Data)');
+            web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
+                .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
+                .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
+                .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
+                .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
+            $scope.timetable.AddSubject(web);
 
-        var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I (Dummy Data)');
-        fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
-            .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
-            .AddTimeslot(Friday, 830, 1030, Practical, 1)
-            .AddTimeslot(Friday, 1430, 1630, Practical, 2);
-        $scope.timetable.AddSubject(fyp);
+            var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I (Dummy Data)');
+            fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
+                .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
+                .AddTimeslot(Friday, 830, 1030, Practical, 1)
+                .AddTimeslot(Friday, 1430, 1630, Practical, 2);
+            $scope.timetable.AddSubject(fyp);
 
-        var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project (Dummy Data)');
-        tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
-            .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
-        $scope.timetable.AddSubject(tp);
-    }
+            var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project (Dummy Data)');
+            tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
+                .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
+            $scope.timetable.AddSubject(tp);
+        }
+    };
 
-    // Read subjects from cookie
+    // Read from cookie
     var cookieData = document.cookie.split(';');
     cookieData.forEach(function(json) {
         if(json && json.length > 0) {
-            var subjectJson = json.substr(json.indexOf('=') + 1);
+            if(json.indexOf('SubjectData:') >= 0) {
+                var subjectJson = json.substr(json.indexOf('=') + 1);
 
-            // Verify that this cookie is subject data
-			if(subjectJson && subjectJson.length > 0 && subjectJson.indexOf('SubjectData:') > 0)
-				$scope.timetable.AddSubject($scope.ParseSubject(subjectJson.substr(subjectJson.indexOf(':') + 1)));
-		}
+                // Verify that this cookie is subject data
+                if (subjectJson && subjectJson.length > 0)
+                    $scope.timetable.AddSubject($scope.ParseSubject(subjectJson));
+            }
+            else if (json.indexOf('TimeGap') >= 0) {
+                var gap = json.substr(json.indexOf('=') + 1);
+                $scope.timetable.Gap(parseInt(gap));
+            }
+        }
     });
-
-    if($scope.timetable.subjects.length == 0)
-        $scope.AddDummyData();
 
     // Add at least one timeslot for the new subject
     $scope.AddNewTimeslot();
@@ -201,17 +262,22 @@ $(document).ready(function() {
             print.close();
         }, 100);
     });
+
 });
 
 // Functions
 function To24HourFormat(time) {
     return time >= 1000? time:
         time >= 100? '0'.concat(time):
-           '00'.concat(time);
+            '00'.concat(time);
 }
 
 function SortTime(timeA, timeB) {
     return timeA - timeB;
+}
+
+function ValidTime(time) {
+    return time >= 0 && time <= 2400 && time % 100 < 60;
 }
 
 // Model Classes
@@ -254,7 +320,7 @@ function Subject(timetable, subjectCode, subjectName) {
                 timeslot.ticked = false;
             });
         });
-    }
+    };
 
     this.ToJSON = function() {
         var json =  '{'
@@ -277,6 +343,7 @@ function Subject(timetable, subjectCode, subjectName) {
 function Timetable() {
 
     // Constructor
+    this.gap = 30;
     this.subjects = [];
     this.timetableDays = [];
     this.timeGaps = [];
@@ -293,6 +360,25 @@ function Timetable() {
         this.timetableDays.forEach(function(timetableDay) {
             timetableDay.NotifyChanges();
         });
+    };
+
+    this.Gap = function (gap) {
+        if(arguments.length == 0) {
+            return this.gap;
+        } else {
+            if(this.gap != gap) {
+                this.gap = gap;
+
+                var expireDate = new Date();
+                expireDate.setTime(expireDate.getTime() + CookieTimeout);
+
+                document.cookie = 'TimeGap='
+                    + this.gap + ';'
+                    + 'expires=' + expireDate.toUTCString();
+
+                this.NotifyChanges();
+            }
+        }
     };
 
     this.GetArrangedTimeGaps = function() {
@@ -314,8 +400,11 @@ function Timetable() {
 
     this.AddDefaultTimeGaps = function() {
         // Add timeGap with 1 hour gap
-        for(var i = 800; i <= 1600; i+= 100)
+        for(var i = 800; i <= 1600; i+= this.gap) {
+            if(i % 100 == 60)
+                i+= 40;
             this.timeGaps.push(i);
+        }
         return this;
     };
 
@@ -364,7 +453,7 @@ function Timetable() {
     };
 
     this.RemoveSubjectFromCookie = function(subject) {
-        document.cookie = subject.subjectCode + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+        document.cookie = 'SubjectData:' + subject.subjectCode + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC';
     };
 
     this.RemoveSubject = function(subject) {
@@ -564,7 +653,7 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
         } else {
             this.ticked = false;
         }
-    }
+    };
 
     this.GetDetails = function() {
         return this.subject.GetDetails()
