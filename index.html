@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>UnitReg System</title>
+		<title>UnitRegApp</title>
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
@@ -11,7 +11,10 @@
 		<link rel="stylesheet" href="main.css" type="text/css" />
 	</head>
 	<body ng-app="unitRegApp" ng-controller="unitRegController">
+
+        <!-- Contents -->
 		<div class="container-fluid">
+            <!-- Navigation Bar -->
 			<nav class="navbar">
 				<ul class="nav nav-tabs nav-padding-s">
 					<li class="active"><a data-toggle="tab" href="#home"><span class="bold">UnitRegApp</span></a></li>
@@ -19,9 +22,15 @@
 					<li><a data-toggle="tab" href="#feedback">Feedbacks</a></li>
 				</ul>
 			</nav>
+
+            <!-- Content Panes -->
 			<div class="tab-content">
+
+                <!-- Panel: UnitRegApp -->
 				<div id="home" class="tab-pane fade in active">
-					<div class="col-sm-12 scrollable-y">
+
+                    <!-- Top Panel: Timetable -->
+					<div class="col-sm-12">
 						<div id="timetable-container" class="col-sm-11">
 							<table id="timetable" class="table table-bordered">
 								<thead>
@@ -63,8 +72,12 @@
 							</button>
 						</div>
 					</div>
+
+                    <!-- Bottom Panel -->
 					<div class="col-sm-12">
-						<div class="bottom-left col-sm-6 panel panel-default padding-m scrollable-y">
+
+                        <!-- Left Panel: Subject -->
+						<div class="bottom-left col-sm-6 panel panel-default padding-m">
 							<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
 								<h4 class="title">
 									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
@@ -103,6 +116,8 @@
 								</div>
 							</div>
 						</div>
+
+                        <!-- Right Panel: Add Subject -->
 						<div class="bottom-right col-sm-6 panel panel-default padding-m scrollable-y">
 							<div class="col-sm-12 action-buttons">
 								<span class="bold">Time Gap</span>
@@ -121,54 +136,20 @@
 									<span >Add Dummy Data</span>
 								</button>
 							</div>
-							<h4 class="title col-sm-12">
-								<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
-										ng-click="AddNewSubject()">
-								</button>
-								<span >Add New Subject</span>
-							</h4>
-							<div class="col-sm-12">
-								<label class="col-sm-3" for="subject-code">Subject Code</label>
-								<input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
-								<label class="col-sm-3" for="title">Subject Name</label>
-								<input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
-							</div>
-							<h4 class="title col-sm-12">
-								<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
-										ng-click="AddNewTimeslot()">
-								</button>
-								<span>Add Timeslot</span>
-							</h4>
-							<div class="col-sm-12" ng-repeat="timeslot in newTimeslots track by $index">
-								<div class="col-sm-2 timeslot-title">
-									<h3>{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}</h3>
-								</div>
-								<div class="right col-sm-9">
-									<div class="col-sm-12">
-										<select class="col-sm-4 btn btn-default" ng-model="timeslot.day"
-												ng-options="DayInWeek.indexOf(day) as day for day in DayInWeek" ng-selected="0">
-										</select>
-										<select class="col-sm-4 btn btn-default" ng-model="timeslot.classType"
-												ng-options="ClassType.indexOf(classType) as classType for classType in ClassType" ng-selected="0">
-										</select>
-										<input class="col-sm-2 input-number" type="number" ng-model="timeslot.number" min="1"/>
-									</div>
-									<div class="col-sm-11 margin-m">
-										<label class="col-sm-2 lbl" for="start-time-{{$index}}"> From </label>
-										<input class="col-sm-4" id="start-time-{{$index}}" type="number"
-											   ng-model="timeslot.startTime" min="800" max="1800" step="100" />
-										<label class="col-sm-2 lbl" for="end-time-{{$index}}"> to </label>
-										<input class="col-sm-4" id="end-time-{{$index}}" type="number"
-											   ng-model="timeslot.endTime" min="800" max="1800" step="100" />
-									</div>
-								</div>
-								<button class=" btn-div img-responsive img-rounded glyphicon glyphicon-remove-sign"
-										ng-click="RemoveNewTimeslot(timeslot)">
-								</button>
-							</div>
+
+                            <div class="container">
+                                <button type="button" class="btn btn-info btn-lg"
+                                        data-toggle="modal"
+                                        data-target="#AddSubjectModal">Add Subject</button>
+
+
+                            </div>
+
 						</div>
 					</div>
 				</div>
+
+                <!-- Panel: About -->
 				<div id="about" class="tab-pane fade">
 					<div class="panel panel-default">
 						<div class="panel-heading bold">Objectives</div>
@@ -190,13 +171,72 @@
 						</div>
 					</div>
 				</div>
+
+                <!-- Panel: Feedback -->
 				<div id="feedback" class="tab-pane fade">
 					<iframe src="https://docs.google.com/forms/d/1-1NJ7P15HJjqbomkQGUOYJRnYzuEq68fquaGVeuXnYg/viewform?embedded=true"
 							width="660" height="1150" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
-				<div>
+                </div>
 			</div>
 		</div>
-			</div>
-		</div>
+
+        <!-- Modals -->
+        <!-- Add Subject Modal -->
+        <div class="modal fade" id="AddSubjectModal" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Add New Subject</h4>
+                    </div>
+                    <div class="modal-body col-sm-12">
+                        <div class="col-sm-12">
+                            <label class="col-sm-3" for="subject-code">Subject Code</label>
+                            <input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
+                            <label class="col-sm-3" for="title">Subject Name</label>
+                            <input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
+                        </div>
+                        <h4 class="title col-sm-12">
+                            <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
+                                    ng-click="AddNewTimeslot()">
+                            </button>
+                            <span>Add Timeslot</span>
+                        </h4>
+                        <div class="col-sm-12" ng-repeat="timeslot in newTimeslots track by $index">
+                            <div class="col-sm-2 timeslot-title">
+                                <h3>{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}</h3>
+                            </div>
+                            <div class="right col-sm-9">
+                                <div class="col-sm-12">
+                                    <select class="col-sm-4 btn btn-default" ng-model="timeslot.day"
+                                            ng-options="DayInWeek.indexOf(day) as day for day in DayInWeek" ng-selected="0">
+                                    </select>
+                                    <select class="col-sm-4 btn btn-default" ng-model="timeslot.classType"
+                                            ng-options="ClassType.indexOf(classType) as classType for classType in ClassType" ng-selected="0">
+                                    </select>
+                                    <input class="col-sm-2 input-number" type="number" ng-model="timeslot.number" min="1"/>
+                                </div>
+                                <div class="col-sm-11 margin-m">
+                                    <label class="col-sm-2 lbl" for="start-time-{{$index}}"> From </label>
+                                    <input class="col-sm-4" id="start-time-{{$index}}" type="number"
+                                           ng-model="timeslot.startTime" min="800" max="1800" step="100" />
+                                    <label class="col-sm-2 lbl" for="end-time-{{$index}}"> to </label>
+                                    <input class="col-sm-4" id="end-time-{{$index}}" type="number"
+                                           ng-model="timeslot.endTime" min="800" max="1800" step="100" />
+                                </div>
+                            </div>
+                            <button class=" btn-div img-responsive img-rounded glyphicon glyphicon-remove-sign"
+                                    ng-click="RemoveNewTimeslot(timeslot)">
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default"
+                                ng-click="AddNewSubject()"
+                                data-dismiss="AddSubjectModal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 	</body>
 </html>
