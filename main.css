@@ -39,6 +39,7 @@ td.has-timeslot {
 
 .panel-subject {
     background-color: #f2dede;
+    border-radius: 20px;
 }
 
 .subject {
@@ -142,4 +143,8 @@ div#AddSubjectModal > div.modal-dialog {
 
 .hr {
     border-bottom: 1px solid #777777;
+}
+
+.action-panel {
+    padding: 10px;
 }

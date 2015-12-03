@@ -30,73 +30,64 @@
 				<div id="home" class="tab-pane fade in active">
 
                     <!-- First Panel: Timetable -->
-					<div class="col-sm-12">
-						<div id="timetable-container" class="col-sm-11">
-							<table id="timetable" class="table table-bordered">
-								<thead>
-									<tr>
-										<td></td>
-										<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
-											ng-if="!$last">
-											{{ To24HourFormat(timeGap) }}<br/>{{ To24HourFormat(timeGaps[$index + 1]) }}
-										</td>
-									</tr>
-								</thead>
-								<tbody>
-									<tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
-										<td class="text-align-right">{{ timetableDay.day }}</td>
-										<td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
-											colspan="{{ timegap.colSpan }}"
-											class="{{ timegap.timeslot? 'has-timeslot':'' }}">
-											{{ timegap.GetDetails() }}
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-						<div class="col-sm-1">
-							<button id="zoom-in" class="img-rounded">
-								<span class="glyphicon glyphicon-zoom-in"></span>
-							</button>
-							<br/>
-							<button id="zoom-out" class="img-rounded">
-								<span class="glyphicon glyphicon-zoom-out"></span>
-							</button>
-							<br/>
-							<button id="zoom-reset" class="img-rounded">
-								<span class="glyphicon glyphicon-refresh"></span>
-							</button>
-							<br/>
-							<button id="btn-print" class="img-rounded">
-								<span class="glyphicon glyphicon-print"></span>
-							</button>
-						</div>
-					</div>
+                    <div id="timetable-container" class="col-sm-12">
+                        <table id="timetable" class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
+                                        ng-if="!$last">
+                                        {{ To24HourFormat(timeGap) }}<br/>{{ To24HourFormat(timeGaps[$index + 1]) }}
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="timetableDay in timetable.timetableDays track by $index">
+                                    <td class="text-align-right">{{ timetableDay.day }}</td>
+                                    <td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
+                                        colspan="{{ timegap.colSpan }}"
+                                        class="{{ timegap.timeslot? 'has-timeslot':'' }}">
+                                        {{ timegap.GetDetails() }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- Second Panel: Action Buttons -->
-                    <div class="col-sm-12 panel">
-                        <div class="col-sm-12">
-                            <span class="bold">Time Gap</span>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label ng-if="timetable.Gap()==30" class="btn btn-default active" ng-click="timetable.Gap(30)">
-                                    30 minutes </label>
-                                <label ng-if="timetable.Gap()==30" class="btn btn-default" ng-click="timetable.Gap(60)">
-                                    <input type="radio" name="options"> 1 hour </label>
-                                <label ng-if="timetable.Gap()==60" class="btn btn-default" ng-click="timetable.Gap(30)">
-                                    30 minutes </label>
-                                <label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
-                                    <input type="radio" name="options"> 1 hour </label>
-                            </div>
-                            <button class="btn btn-default"
-                                    ng-click="AddDummyData()">
-                                <span >Add Dummy Data</span>
-                            </button>
-                            <button type="button" class="btn btn-default"
-                                    data-toggle="modal"
-                                    data-target="#AddSubjectModal">
-                                <span >Add Subject</span>
-                            </button>
+                    <div class="col-sm-12 action-panel">
+                        <span class="bold">Time Gap</span>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label ng-if="timetable.Gap()==30" class="btn btn-default active" ng-click="timetable.Gap(30)">
+                                30 minutes </label>
+                            <label ng-if="timetable.Gap()==30" class="btn btn-default" ng-click="timetable.Gap(60)">
+                                <input type="radio" name="options"> 1 hour </label>
+                            <label ng-if="timetable.Gap()==60" class="btn btn-default" ng-click="timetable.Gap(30)">
+                                30 minutes </label>
+                            <label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
+                                <input type="radio" name="options"> 1 hour </label>
                         </div>
+                        <button class="btn btn-default"
+                                ng-click="AddDummyData()">
+                            <span>Add Dummy Data</span>
+                        </button>
+                        <button type="button" class="btn btn-default"
+                                data-toggle="modal"
+                                data-target="#AddSubjectModal">
+                            <span>Add Subject</span>
+                        </button>
+                        <button id="zoom-in" class="btn btn-default">
+                            <span> Zoom In</span>
+                        </button>
+                        <button id="zoom-out" class="btn btn-default">
+                            <span>Zoom Out</span>
+                        </button>
+                        <button id="zoom-reset" class="btn btn-default">
+                            <span>Reset Zoom</span>
+                        </button>
+                        <button id="btn-print" class="btn btn-default">
+                            <span>Print</span>
+                        </button>
                     </div>
 
                     <!-- Third Panel: Subjects -->
@@ -162,12 +153,12 @@
                                      to add new subjects</li>
                                 <li>Tick on
                                     <label>
-                                        <input class="timeslot" type="checkbox" disabled checked> Checkbox
+                                        <input class="timeslot" type="checkbox" disabled checked> timeslot
                                     </label>
-                                   of timeslot wanted to add into timetable</li>
-                                <li>Preview your timetable and print
-                                    <button class="img-rounded" disabled>
-                                        <span class="glyphicon glyphicon-print"></span>
+                                   to add into timetable</li>
+                                <li>Preview your timetable and
+                                    <button class="btn btn-default" disabled>
+                                        <span>Print</span>
                                     </button></li>
                             </ol>
                         </div>
@@ -177,7 +168,7 @@
 					<div class="panel panel-default">
 						<div class="panel-heading bold">Objectives</div>
 						<div class="panel-body">
-							<p>This web application allows UTAR students to simulate and plan their upcoming trimester's timetable</p>
+							<p>This web application allows students to simulate and plan their upcoming trimester's timetable</p>
 						</div>
 					</div>
 
