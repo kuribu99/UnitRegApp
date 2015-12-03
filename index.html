@@ -29,7 +29,7 @@
                 <!-- Panel: UnitRegApp -->
 				<div id="home" class="tab-pane fade in active">
 
-                    <!-- Top Panel: Timetable -->
+                    <!-- First Panel: Timetable -->
 					<div class="col-sm-12">
 						<div id="timetable-container" class="col-sm-11">
 							<table id="timetable" class="table table-bordered">
@@ -73,101 +73,126 @@
 						</div>
 					</div>
 
-                    <!-- Bottom Panel -->
-					<div class="col-sm-12">
-
-                        <!-- Left Panel: Subject -->
-						<div class="bottom-left col-sm-6 panel panel-default padding-m">
-							<div class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
-								<h4 class="title">
-									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
-											ng-click="timetable.RemoveSubject(subject)">
-									</button>
-									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up"
-											ng-if="$index > 0"
-											ng-click="timetable.IncreaseSubjectPriority(subject)">
-									</button>
-									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up btn-disabled"
-											ng-if="$index == 0" disabled>
-									</button>
-									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down"
-											ng-if="$index < timetable.subjects.length - 1"
-											ng-click="timetable.DecreaseSubjectPriority(subject)">
-									</button>
-									<button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down btn-disabled"
-											ng-if="$index >= timetable.subjects.length - 1" disabled>
-									</button>
-									<span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
-								</h4>
-								<div class="col-sm-4" ng-repeat="classtype in subject.timeslots"
-									 ng-if="classtype.length > 0">
-									<h5> {{ ClassType[$index] }}</h5>
-									<div ng-repeat="timeslot in classtype track by $index">
-										<label>
-											<input class="timeslot" type="checkbox"
-												   ng-model="timeslot.Tick"
-												   ng-model-options="{ getterSetter: true }" />
-											{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
-											({{ DayInWeek[timeslot.day].substr(0, 3) }},
-											{{ To24HourFormat(timeslot.startTime) }}-{{ To24HourFormat(timeslot.endTime) }})
-										</label>
-										<br/>
-									</div>
-								</div>
-							</div>
-						</div>
-
-                        <!-- Right Panel: Add Subject -->
-						<div class="bottom-right col-sm-6 panel panel-default padding-m scrollable-y">
-							<div class="col-sm-12 action-buttons">
-								<span class="bold">Time Gap</span>
-								<div class="btn-group" data-toggle="buttons">
-									<label ng-if="timetable.Gap()==30" class="btn btn-default active" ng-click="timetable.Gap(30)">
-										30 minutes </label>
-									<label ng-if="timetable.Gap()==30" class="btn btn-default" ng-click="timetable.Gap(60)">
-										<input type="radio" name="options"> 1 hour </label>
-									<label ng-if="timetable.Gap()==60" class="btn btn-default" ng-click="timetable.Gap(30)">
-										30 minutes </label>
-									<label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
-										<input type="radio" name="options"> 1 hour </label>
-								</div>
-								<button class="btn-inline img-rounded"
-										ng-click="AddDummyData()">
-									<span >Add Dummy Data</span>
-								</button>
-							</div>
-
-                            <div class="container">
-                                <button type="button" class="btn btn-info btn-lg"
-                                        data-toggle="modal"
-                                        data-target="#AddSubjectModal">Add Subject</button>
-
-
+                    <!-- Second Panel: Action Buttons -->
+                    <div class="col-sm-12 panel">
+                        <div class="col-sm-12">
+                            <span class="bold">Time Gap</span>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label ng-if="timetable.Gap()==30" class="btn btn-default active" ng-click="timetable.Gap(30)">
+                                    30 minutes </label>
+                                <label ng-if="timetable.Gap()==30" class="btn btn-default" ng-click="timetable.Gap(60)">
+                                    <input type="radio" name="options"> 1 hour </label>
+                                <label ng-if="timetable.Gap()==60" class="btn btn-default" ng-click="timetable.Gap(30)">
+                                    30 minutes </label>
+                                <label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
+                                    <input type="radio" name="options"> 1 hour </label>
                             </div>
+                            <button class="btn btn-default"
+                                    ng-click="AddDummyData()">
+                                <span >Add Dummy Data</span>
+                            </button>
+                            <button type="button" class="btn btn-default"
+                                    data-toggle="modal"
+                                    data-target="#AddSubjectModal">
+                                <span >Add Subject</span>
+                            </button>
+                        </div>
+                    </div>
 
-						</div>
-					</div>
+                    <!-- Third Panel: Subjects -->
+                    <div class="panel-subject col-sm-12 panel padding-m">
+                        <div ng-if="timetable.subjects.length == 0">
+                            <h3 class="h3 text-align-center">
+                                <span>No subjects found. Please add subjects</span>
+                            </h3>
+                        </div>
+                        <div ng-if="timetable.subjects.length > 0" class="col-sm-12" ng-repeat="subject in timetable.subjects track by $index">
+                            <h4 class="title">
+                                <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-remove-sign"
+                                        ng-click="timetable.RemoveSubject(subject)">
+                                </button>
+                                <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up"
+                                        ng-if="$index > 0"
+                                        ng-click="timetable.IncreaseSubjectPriority(subject)">
+                                </button>
+                                <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-up btn-disabled"
+                                        ng-if="$index == 0" disabled>
+                                </button>
+                                <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down"
+                                        ng-if="$index < timetable.subjects.length - 1"
+                                        ng-click="timetable.DecreaseSubjectPriority(subject)">
+                                </button>
+                                <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-arrow-down btn-disabled"
+                                        ng-if="$index >= timetable.subjects.length - 1" disabled>
+                                </button>
+                                <span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
+                            </h4>
+                            <div class="col-sm-4" ng-repeat="classtype in subject.timeslots"
+                                 ng-if="classtype.length > 0">
+                                <h5> {{ ClassType[$index] }}</h5>
+                                <div ng-repeat="timeslot in classtype track by $index">
+                                    <label>
+                                        <input class="timeslot" type="checkbox"
+                                               ng-model="timeslot.Tick"
+                                               ng-model-options="{ getterSetter: true }" />
+                                        {{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
+                                        ({{ DayInWeek[timeslot.day].substr(0, 3) }},
+                                        {{ To24HourFormat(timeslot.startTime) }}-{{ To24HourFormat(timeslot.endTime) }})
+                                    </label>
+                                    <br/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
 				</div>
 
                 <!-- Panel: About -->
 				<div id="about" class="tab-pane fade">
+
+                    <!-- Panel: Instruction -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading bold">Instructions</div>
+                        <div class="panel-body">
+                            <ol class="li-container">
+                                <li>Click
+                                    <button type="button" class="btn btn-default" disabled>
+                                        <span >Add Subject</span>
+                                    </button>
+                                     to add new subjects</li>
+                                <li>Tick on
+                                    <label>
+                                        <input class="timeslot" type="checkbox" disabled checked> Checkbox
+                                    </label>
+                                   of timeslot wanted to add into timetable</li>
+                                <li>Preview your timetable and print
+                                    <button class="img-rounded" disabled>
+                                        <span class="glyphicon glyphicon-print"></span>
+                                    </button></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Panel: Objectives -->
 					<div class="panel panel-default">
 						<div class="panel-heading bold">Objectives</div>
 						<div class="panel-body">
 							<p>This web application allows UTAR students to simulate and plan their upcoming trimester's timetable</p>
 						</div>
 					</div>
+
+                    <!-- Panel: About this Website -->
 					<div class="panel panel-default">
 						<div class="panel-heading bold">About this website</div>
 						<div class="panel-body">
-							<p>Hosted directly from <a href="https://github.com/">GitHub</a></p>
-						</div>
-					</div>
-					<div class="panel panel-default">
-						<div class="panel-heading bold">About me</div>
-						<div class="panel-body">
-							<p>One who likes programming</p>
-							<p><a href="https://github.com/kuribu99">KongMy</a></p>
+                            <ul class="li-container">
+                                <li>Hosted directly from <a href="https://github.com/">GitHub</a></li>
+                                <li>Framework used:
+                                    CSS (<a href="http://getbootstrap.com/">Bootstrap</a>),
+                                    JS (<a href="https://jquery.com/">jQuery</a>,
+                                    <a href="https://jquery.com//">AngularJS</a>,
+                                    <a href="http://getbootstrap.com/">Bootstrap JS</a>)</li>
+                            </ul>
 						</div>
 					</div>
 				</div>
@@ -184,44 +209,49 @@
         <!-- Add Subject Modal -->
         <div class="modal fade" id="AddSubjectModal" role="dialog">
             <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
+                <div class="modal-content col-sm-12">
+                    <div class="modal-header col-sm-12">
                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                         <h4 class="modal-title">Add New Subject</h4>
                     </div>
                     <div class="modal-body col-sm-12">
+
+                        <!-- Subject Code & Name -->
                         <div class="col-sm-12">
                             <label class="col-sm-3" for="subject-code">Subject Code</label>
                             <input class="col-sm-8" type="text" id="subject-code" name="subject-code" ng-model="newSubject.subjectCode"/>
                             <label class="col-sm-3" for="title">Subject Name</label>
                             <input class="col-sm-8" type="text" id="title" name="title" ng-model="newSubject.subjectName" />
                         </div>
-                        <h4 class="title col-sm-12">
-                            <button class="btn-inline img-responsive img-rounded glyphicon glyphicon-plus-sign"
-                                    ng-click="AddNewTimeslot()">
-                            </button>
-                            <span>Add Timeslot</span>
+
+                        <!-- Timeslots -->
+                        <h4 class="title col-sm-12 margin-m">
+                            <span>Timeslots</span>
                         </h4>
-                        <div class="col-sm-12" ng-repeat="timeslot in newTimeslots track by $index">
+                        <div class="col-sm-12" ng-if="newTimeslots.length == 0">
+                            <h5 class="text-align-center">Please add timeslots</h5>
+                        </div>
+                        <div class="col-sm-12" ng-if="newTimeslots.length > 0"
+                             ng-repeat="timeslot in newTimeslots track by $index">
                             <div class="col-sm-2 timeslot-title">
                                 <h3>{{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}</h3>
                             </div>
                             <div class="right col-sm-9">
-                                <div class="col-sm-12">
+                                <div class="col-sm-11">
                                     <select class="col-sm-4 btn btn-default" ng-model="timeslot.day"
                                             ng-options="DayInWeek.indexOf(day) as day for day in DayInWeek" ng-selected="0">
                                     </select>
-                                    <select class="col-sm-4 btn btn-default" ng-model="timeslot.classType"
+                                    <select class="col-sm-5 btn btn-default" ng-model="timeslot.classType"
                                             ng-options="ClassType.indexOf(classType) as classType for classType in ClassType" ng-selected="0">
                                     </select>
-                                    <input class="col-sm-2 input-number" type="number" ng-model="timeslot.number" min="1"/>
+                                    <input class="col-sm-3 input-number" type="number" ng-model="timeslot.number" min="1" max="9"/>
                                 </div>
                                 <div class="col-sm-11 margin-m">
-                                    <label class="col-sm-2 lbl" for="start-time-{{$index}}"> From </label>
-                                    <input class="col-sm-4" id="start-time-{{$index}}" type="number"
+                                    <label class="col-sm-3 lbl" for="start-time-{{$index}}"> From </label>
+                                    <input class="col-sm-3" id="start-time-{{$index}}" type="number"
                                            ng-model="timeslot.startTime" min="800" max="1800" step="100" />
-                                    <label class="col-sm-2 lbl" for="end-time-{{$index}}"> to </label>
-                                    <input class="col-sm-4" id="end-time-{{$index}}" type="number"
+                                    <label class="col-sm-3 lbl" for="end-time-{{$index}}"> to </label>
+                                    <input class="col-sm-3" id="end-time-{{$index}}" type="number"
                                            ng-model="timeslot.endTime" min="800" max="1800" step="100" />
                                 </div>
                             </div>
@@ -229,11 +259,22 @@
                                     ng-click="RemoveNewTimeslot(timeslot)">
                             </button>
                         </div>
+
+                        <!-- Add Timeslot Button -->
+                        <div class="hr col-sm-12 margin-m">
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-default"
+                                    ng-click="AddNewTimeslot()">
+                                <span>Add Timeslot</span>
+                            </button>
+                        </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer col-sm-12">
                         <button type="button" class="btn btn-default"
-                                ng-click="AddNewSubject()"
-                                data-dismiss="AddSubjectModal">Close</button>
+                                ng-click="AddNewSubject()" >
+                            <span>Add Subject</span>
+                        </button>
                     </div>
                 </div>
             </div>

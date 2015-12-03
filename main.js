@@ -100,7 +100,7 @@ app.controller("unitRegController", function($scope) {
             while (arr.length > 1) {
                 item = arr.pop();
                 if(arr.indexOf(item) >= 0 && hasDuplicate.indexOf(item) < 0) {
-                    errorMsg += 'Duplicate timeslot; ' + item + '\n';
+                    errorMsg += 'Duplicate timeslot: ' + item + '\n';
                     hasError = true;
                     hasDuplicate.push(item);
                 }

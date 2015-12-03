@@ -37,7 +37,7 @@ td.has-timeslot {
     text-align: center;
 }
 
-.bottom-left {
+.panel-subject {
     background-color: #f2dede;
 }
 
@@ -54,8 +54,6 @@ td.has-timeslot {
 }
 
 .action-buttons {
-    color: #000000;
-    border-bottom: 1px solid #777777;
     padding-bottom: 5px;
     font-size: 15px;
 }
@@ -113,10 +111,17 @@ select {
     vertical-align:middle;
 }
 
+.text-align-left {
+    text-align: left;
+}
+
 .text-align-right {
     text-align: right;
 }
 
+.text-align-center {
+    text-align: center;
+}
 .bold {
     font-weight: bold;
 }
@@ -129,4 +134,12 @@ select {
 
 div#AddSubjectModal > div.modal-dialog {
     background-color: #dedef2;
+}
+
+.li-container > li {
+    margin: 10px;
+}
+
+.hr {
+    border-bottom: 1px solid #777777;
 }
