@@ -235,14 +235,14 @@
                                     <select class="col-sm-5 btn btn-default" ng-model="timeslot.classType"
                                             ng-options="ClassType.indexOf(classType) as classType for classType in ClassType" ng-selected="0">
                                     </select>
-                                    <input class="col-sm-3 input-number" type="number" ng-model="timeslot.number" min="1" max="9"/>
+                                    <input class="col-sm-3 input-number" type="number" ng-model="timeslot.number" min="1" max="19"/>
                                 </div>
                                 <div class="col-sm-11 margin-m">
                                     <input class="col-sm-5" id="start-time-{{$index}}" type="number"
-                                           ng-model="timeslot.startTime" min="800" max="1800" step="100" />
+                                           ng-model="timeslot.startTime" min="800" max="2400" step="100" />
                                     <label class="col-sm-2 lbl" for="end-time-{{$index}}"> till </label>
                                     <input class="col-sm-5" id="end-time-{{$index}}" type="number"
-                                           ng-model="timeslot.endTime" min="800" max="1800" step="100" />
+                                           ng-model="timeslot.endTime" min="800" max="2400" step="100" />
                                 </div>
                             </div>
                             <button class=" btn-div img-responsive img-rounded glyphicon glyphicon-remove-sign"
