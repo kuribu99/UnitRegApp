@@ -72,13 +72,13 @@ app.controller("unitRegController", function($scope) {
                     number = -1;
                 }
 
-                if (number <= 0) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number\n';
+                if (number <= 0 || number > 9) {
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number. Acceptable range is 1 to 9\n';
                     hasError = true;
                 }
 
                 if(!ValidTime(timeslot.startTime)) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot start time\n';
+                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot start time. Acceptable range is 1 to 9\n';
                     hasError = true;
                 }
                 if(!ValidTime(timeslot.endTime)) {

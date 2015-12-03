@@ -74,7 +74,7 @@
                         <button type="button" class="btn btn-default"
                                 data-toggle="modal"
                                 data-target="#AddSubjectModal">
-                            <span>Add Subject</span>
+                            <strong>Add Subject</strong>
                         </button>
                         <button id="zoom-in" class="btn btn-default">
                             <span> Zoom In</span>
@@ -230,7 +230,7 @@
                             <div class="right col-sm-9">
                                 <div class="col-sm-11">
                                     <select class="col-sm-4 btn btn-default" ng-model="timeslot.day"
-                                            ng-options="DayInWeek.indexOf(day) as day for day in DayInWeek" ng-selected="0">
+                                            ng-options="DayInWeek.indexOf(day) as day.substr(0, 3) for day in DayInWeek" ng-selected="0">
                                     </select>
                                     <select class="col-sm-5 btn btn-default" ng-model="timeslot.classType"
                                             ng-options="ClassType.indexOf(classType) as classType for classType in ClassType" ng-selected="0">
@@ -238,11 +238,10 @@
                                     <input class="col-sm-3 input-number" type="number" ng-model="timeslot.number" min="1" max="9"/>
                                 </div>
                                 <div class="col-sm-11 margin-m">
-                                    <label class="col-sm-3 lbl" for="start-time-{{$index}}"> From </label>
-                                    <input class="col-sm-3" id="start-time-{{$index}}" type="number"
+                                    <input class="col-sm-5" id="start-time-{{$index}}" type="number"
                                            ng-model="timeslot.startTime" min="800" max="1800" step="100" />
-                                    <label class="col-sm-3 lbl" for="end-time-{{$index}}"> to </label>
-                                    <input class="col-sm-3" id="end-time-{{$index}}" type="number"
+                                    <label class="col-sm-2 lbl" for="end-time-{{$index}}"> till </label>
+                                    <input class="col-sm-5" id="end-time-{{$index}}" type="number"
                                            ng-model="timeslot.endTime" min="800" max="1800" step="100" />
                                 </div>
                             </div>
