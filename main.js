@@ -597,18 +597,20 @@ function TimetableDay(timetable, day) {
     };
 }
 
-function Timeslot(day, startTime, endTime, subject, classType, number) {
+function Timeslot(subject, classType, number) {
 
     // Constructor
-    this.day = day;
-    this.startTime = startTime;
-    this.endTime = endTime;
     this.subject = subject;
     this.classType = classType;
     this.number = number;
+    this.classes = [];
     this.ticked = false;
 
     // Methods
+    this.AddClass = function (newClass) {
+        this.classes.push(newClass);
+    };
+
     this.ClashWith = function(otherTimeslot) {
         var startTimeDifference = this.startTime - otherTimeslot.startTime;
 
@@ -662,12 +664,51 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
     };
 
     this.ToJSON = function() {
+        var json = '{'
+            + '"classType":' + this.classType + ','
+            + '"number":' + this.number
+            + '"classes":[';
+        this.classes.forEach(function (eachClass) {
+            json += eachClass.ToJSON() + ',';
+        });
+        if(json.charAt(json.length - 1) == ',')
+            json = json.substr(0, json.length - 1);
+        json += ']';
+        json += '}';
+        return json;
+    };
+}
+
+function Class(day, startTime, endTime) {
+
+    // Constructor
+    this.day = day;
+    this.startTime = startTime;
+    this.endTime = endTime;
+
+    // Methods
+    this.ClashWith = function(otherClass) {
+        var startTimeDifference = this.startTime - otherClass.startTime;
+
+        if(startTimeDifference == 0)
+            return true;
+
+        // This class is later than other class
+        // If this class starts before other class ends, it has clashes
+        else if (startTimeDifference > 0)
+            return this.startTime < otherClass.endTime
+
+        // This class is earlier than other class
+        // If other class have not end when this class starts, it has clashes
+        else
+            return this.endTime > otherClass.startTime;
+    };
+
+    this.ToJSON = function() {
         return '{'
             + '"day":' + this.day + ','
             + '"startTime":' + this.startTime + ','
-            + '"endTime":' + this.endTime + ','
-            + '"classType":' + this.classType + ','
-            + '"number":' + this.number
+            + '"endTime":' + this.endTime
             + '}';
     };
 }
