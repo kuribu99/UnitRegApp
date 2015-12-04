@@ -72,7 +72,7 @@ app.controller("unitRegController", function($scope) {
                     number = -1;
                 }
 
-                if (number <= 0 || number > 9) {
+                if (number <= 0 || number > 19) {
                     errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number. Acceptable range is 1 to 9\n';
                     hasError = true;
                 }
