@@ -23,7 +23,7 @@ const Tutorial = 1;
 const Practical = 2;
 
 // Cookie timeout period is 1 month
-const CookieTimeout = 60 * 60 * 24 * 30;
+const CookieTimeout = 60 * 60 * 24 * 30 * 1000;
 
 // Controller
 var app = angular.module("unitRegApp", []);
