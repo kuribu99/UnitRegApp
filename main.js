@@ -72,7 +72,7 @@ app.controller("unitRegController", function($scope) {
                     number = -1;
                 }
 
-                if (number <= 0 || number > 9) {
+                if (number <= 0 || number > 19) {
                     errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number. Acceptable range is 1 to 9\n';
                     hasError = true;
                 }
@@ -112,7 +112,7 @@ app.controller("unitRegController", function($scope) {
         }
         else {
             $scope.newTimeslots.forEach(function (timeslot) {
-                this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number);
+                this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number, false);
             }, $scope);
 
             $scope.timetable.AddSubject($scope.newSubject);
@@ -135,24 +135,25 @@ app.controller("unitRegController", function($scope) {
         this.newTimeslots.splice(index, 1);
     };
 
-    $scope.ParseSubject = function(json) {
+    $scope.ParseSubject = function(data) {
         var subject = null;
-        try {
-            var data = JSON.parse(json);
-            subject = new Subject($scope.timetable, data.subjectCode, data.subjectName);
+        subject = new Subject($scope.timetable, data.subjectCode, data.subjectName);
 
-            data.timeslots.forEach(function(timeslot) {
-                subject.AddTimeslot(timeslot.day,
-                    timeslot.startTime,
-                    timeslot.endTime,
-                    timeslot.classType,
-                    timeslot.number);
-            });
-        } catch(e) {}
+        data.timeslots.forEach(function(timeslot) {
+            var ticked = false;
+            try {
+                ticked = timeslot.ticked != null && timeslot.ticked == 1;
+            } catch (e) {}
+            subject.AddTimeslot(timeslot.day,
+                timeslot.startTime,
+                timeslot.endTime,
+                timeslot.classType,
+                timeslot.number,
+                ticked);
+        });
         return subject;
     };
 
-    // Add dummy data function
     $scope.AddDummyData = function() {
         if(confirm('This will add 3 dummy subjects, proceed?')) {
             var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development (Dummy Data)');
@@ -177,6 +178,29 @@ app.controller("unitRegController", function($scope) {
         }
     };
 
+    $scope.Copy = function() {
+        json = $scope.timetable.GetSubjectsAsJSON();
+        var temp = $('<input type="text">').val(json).appendTo('body').select();
+        document.execCommand("Copy");
+        temp.remove();
+        alert('Subject data copied to clipboard. Use "Import Subject" to add them back');
+    };
+
+    $scope.ImportSubjects = function() {
+        var json = prompt('Please paste subject data here');
+        if(json != null && json.length > 0) {
+            try {
+                var subjects = JSON.parse(json);
+                subjects.Subjects.forEach(function(subject) {
+                    $scope.timetable.AddSubject($scope.ParseSubject(subject));
+                }, this);
+            }
+            catch(e) {
+                alert('Invalid data');
+            }
+        }
+    };
+
     // Read from cookie
     var cookieData = document.cookie.split(';');
     cookieData.forEach(function(json) {
@@ -185,8 +209,12 @@ app.controller("unitRegController", function($scope) {
                 var subjectJson = json.substr(json.indexOf('=') + 1);
 
                 // Verify that this cookie is subject data
-                if (subjectJson && subjectJson.length > 0)
-                    $scope.timetable.AddSubject($scope.ParseSubject(subjectJson));
+                if (subjectJson && subjectJson.length > 0) {
+                    try {
+                        $scope.timetable.AddSubject($scope.ParseSubject(JSON.parse(subjectJson)));
+                    }
+                    catch(e) {}
+                }
             }
             else if (json.indexOf('TimeGap') >= 0) {
                 var gap = json.substr(json.indexOf('=') + 1);
@@ -262,7 +290,6 @@ $(document).ready(function() {
             print.close();
         }, 100);
     });
-
 });
 
 // Functions
@@ -293,8 +320,9 @@ function Subject(timetable, subjectCode, subjectName) {
         this.timeslots.push([]);
 
     // Methods
-    this.AddTimeslot = function (day, startTime, endTime, classType, number) {
+    this.AddTimeslot = function (day, startTime, endTime, classType, number, ticked) {
         var timeslot = new Timeslot(day, startTime, endTime, this, classType, number);
+        timeslot.ticked = ticked;
         this.timeslots[classType].push(timeslot);
         return this;
     };
@@ -506,6 +534,19 @@ function Timetable() {
             subject.Reset();
         });
         this.NotifyChanges();
+    };
+
+    this.GetSubjectsAsJSON = function() {
+        var json =  '{'
+            + '"Subjects":[';
+        this.subjects.forEach(function (subject) {
+            json += subject.ToJSON() + ',';
+        });
+        if(json.charAt(json.length - 1) == ',')
+            json = json.substr(0, json.length - 1);
+        json += ']';
+        json += '}';
+        return json;
     }
 }
 
@@ -667,6 +708,7 @@ function Timeslot(subject, classType, number) {
         var json = '{'
             + '"classType":' + this.classType + ','
             + '"number":' + this.number
+            + '"ticked":' + (this.ticked? 1: 0)
             + '"classes":[';
         this.classes.forEach(function (eachClass) {
             json += eachClass.ToJSON() + ',';

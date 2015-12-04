@@ -87,6 +87,12 @@
                         </button>
                         <button id="btn-print" class="btn btn-default">
                             <span>Print</span>
+                        </button>                        
+                        <button id="btn-copy" class="btn btn-default" ng-click="Copy()">
+                            <span>Copy all Subjects</span>
+                        </button>
+                        <button id="btn-import" class="btn btn-default" ng-click="ImportSubjects()">
+                            <span>Import Subjects</span>
                         </button>
                     </div>
 
@@ -160,9 +166,29 @@
                                     <button class="btn btn-default" disabled>
                                         <span>Print</span>
                                     </button></li>
+                                <li><button class="btn btn-default" disabled>
+                                        <span>Copy all Subjects</span>
+                                    </button> and send to your friends</li>
+                                <li><button class="btn btn-default" disabled>
+                                        <span>Import Subjects</span>
+                                    </button> and paste back the copied data to add back the timetable shared by your friend</li>
                             </ol>
                         </div>
                     </div>
+
+                    <!-- Panel: Known Issues -->
+					<div class="panel panel-default">
+						<div class="panel-heading bold">Known Issues</div>
+						<div class="panel-body">
+							<ul>
+								<li>Currently unable to add two classes under one timeslot, for instance, Lecture that have two classes</li>
+								<li>The current solution is to use Tutorial or Practical class to represent</li>
+								<li>If the subject only have Lecture and Tutorial, use Practical represent it</li>
+								<li>Else if it is Lecture and Practical, use Tutorial to represent it</li>
+								<li>I will get this fixed in next update</li>
+							</ul>
+						</div>
+					</div>
 
                     <!-- Panel: Objectives -->
 					<div class="panel panel-default">
@@ -177,6 +203,7 @@
 						<div class="panel-heading bold">About this website</div>
 						<div class="panel-body">
                             <ul class="li-container">
+                            	<li>Current release: v1.1.0</li>
                                 <li>Hosted directly from <a href="https://github.com/">GitHub</a></li>
                                 <li>Framework used:
                                     CSS (<a href="http://getbootstrap.com/">Bootstrap</a>),
