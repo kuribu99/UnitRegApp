@@ -140,12 +140,16 @@ app.controller("unitRegController", function($scope) {
         subject = new Subject($scope.timetable, data.subjectCode, data.subjectName);
 
         data.timeslots.forEach(function(timeslot) {
+            var ticked = false;
+            try {
+                ticked = timeslot.ticked != null && timeslot.ticked == 1;
+            } catch (e) {}
             subject.AddTimeslot(timeslot.day,
                 timeslot.startTime,
                 timeslot.endTime,
                 timeslot.classType,
                 timeslot.number,
-                (timeslot.ticked != null && timeslot.ticked == 1));
+                ticked);
         });
         return subject;
     };
