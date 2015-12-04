@@ -22,12 +22,29 @@ const Lecture = 0;
 const Tutorial = 1;
 const Practical = 2;
 
+const WeekType = [
+    'Odd week only',
+    'Even week only',
+    'Normal'
+];
+const OddWeekOnly = 0;
+const EvenWeekOnly = 1;
+const Normal = 2;
+
+const ClassNumber = [
+    'One only',
+    'Two classes'
+];
+const OneClass = 0;
+const TwoClsss = 1;
+
 // Cookie timeout period is 1 month
 const CookieTimeout = 60 * 60 * 24 * 30;
 
 // Controller
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
+
     // Variables
     $scope.DayInWeek = DayInWeek;
     $scope.ClassType = ClassType;
@@ -308,66 +325,6 @@ function ValidTime(time) {
 }
 
 // Model Classes
-function Subject(timetable, subjectCode, subjectName) {
-
-    // Constructor
-    this.timetable = timetable;
-    this.subjectCode = subjectCode;
-    this.subjectName = subjectName;
-    this.timeslots = [];
-
-    for(var i = 0; i< ClassType.length; i++)
-        this.timeslots.push([]);
-
-    // Methods
-    this.AddTimeslot = function (day, startTime, endTime, classType, number, ticked) {
-        var timeslot = new Timeslot(day, startTime, endTime, this, classType, number);
-        timeslot.ticked = ticked;
-        this.timeslots[classType].push(timeslot);
-        return this;
-    };
-
-    this.Tick = function(timeslot) {
-        if(!this.timetable.HasClash(timeslot)) {
-            this.timeslots[timeslot.classType].forEach(function (otherTimeslot) {
-                otherTimeslot.ticked = false;
-            });
-            timeslot.ticked = true;
-            this.timetable.NotifyChanges();
-        }
-        return this;
-    };
-
-    this.GetDetails = function() {
-        return this.subjectCode.concat(' ').concat(this.subjectName);
-    };
-
-    this.Reset = function() {
-        this.timeslots.forEach(function(timeslotByClassType) {
-            timeslotByClassType.forEach(function(timeslot) {
-                timeslot.ticked = false;
-            });
-        });
-    };
-
-    this.ToJSON = function() {
-        var json =  '{'
-            + '"subjectCode":"' + this.subjectCode + '",'
-            + '"subjectName":"' + this.subjectName + '",'
-            + '"timeslots":[';
-        this.timeslots.forEach(function (timeslotByClassType) {
-            timeslotByClassType.forEach(function(timeslot) {
-                json += timeslot.ToJSON() + ',';
-            });
-        });
-        if(json.charAt(json.length - 1) == ',')
-            json = json.substr(0, json.length - 1);
-        json += ']';
-        json += '}';
-        return json;
-    };
-}
-
 function Timetable() {
 
     // Constructor
@@ -410,65 +367,50 @@ function Timetable() {
     };
 
     this.GetArrangedTimeGaps = function() {
+        // Only update if changes found
         if(this.hasChange) {
-            this.ClearTimeGaps()
-                .AddDefaultTimeGaps()
-                .InitializeTimeGaps()
-                .SortTimeGaps()
-                .hasChange = false;
+
+            // Clear timeGaps
+            while(this.timeGaps.length > 0)
+                this.timeGaps.pop();
+
+            // Add default time gaps
+            for(var i = 800; i <= 1600; i+= this.gap) {
+                if(i % 100 == 60)
+                    i+= 40;
+                this.timeGaps.push(i);
+            }
+
+            // Add in time gaps
+            this.timetableDays.forEach(function(timetableDay) {
+                this.AddTimeGaps(timetableDay.GetTimeGaps());
+            }, this);
+
+            this.timeGaps.sort(SortTime);
+            this.hasChange = false;
         }
         return this.timeGaps;
     };
 
-    this.ClearTimeGaps = function() {
-        while(this.timeGaps.length > 0)
-            this.timeGaps.pop();
-        return this;
-    };
-
-    this.AddDefaultTimeGaps = function() {
-        // Add timeGap with 1 hour gap
-        for(var i = 800; i <= 1600; i+= this.gap) {
-            if(i % 100 == 60)
-                i+= 40;
-            this.timeGaps.push(i);
-        }
-        return this;
-    };
-
-    this.InitializeTimeGaps = function() {
-        this.timetableDays.forEach(function(timetableDay) {
-            timetableDay.timeslots.forEach(function(timeslot){
-                if(timeslot.ticked)
-                    this.AddTimeslot(timeslot);
-            }, this);
+    this.AddTimeGaps = function(timeGaps){
+        timeGaps.forEach(function(timeGap) {
+            if (this.timeGaps.indexOf(timeGap) < 0)
+                this.timeGaps.push(timeGap);
         }, this);
-        return this;
-    };
-
-    this.AddTimeGap = function(time){
-        if(this.timeGaps.indexOf(time) < 0)
-            this.timeGaps.push(time);
-        return this;
-    };
-
-    this.SortTimeGaps = function() {
-        this.timeGaps.sort(SortTime);
-        return this;
     };
 
     this.AddSubject = function(subject) {
         this.subjects.push(subject);
-        subject.timeslots.forEach(function(timeslotByClassTypes) {
-            timeslotByClassTypes.forEach(function(timeslot) {
-                this.timetableDays[timeslot.day].AddTimeslot(timeslot);
-            }, this);
-        }, this);
-
+        this.AddClassesToTimetableDay(subject.GetAllClasses());
         this.AddSubjectToCookie(subject);
-
         this.NotifyChanges();
         return this;
+    };
+
+    this.AddClassesToTimetableDay = function(classes) {
+        classes.forEach(function (aClass) {
+            this.timetableDays[aClass.day].push(aClass);
+        }, this);
     };
 
     this.AddSubjectToCookie = function(subject) {
@@ -498,12 +440,6 @@ function Timetable() {
             this.NotifyChanges();
         }
         return this;
-    };
-
-    this.AddTimeslot = function(timeslot) {
-        return this
-            .AddTimeGap(timeslot.startTime)
-            .AddTimeGap(timeslot.endTime);
     };
 
     this.HasClash = function(timeslot) {
@@ -556,7 +492,7 @@ function TimetableDay(timetable, day) {
     this.timetable = timetable;
     this.day = day;
     this.hasChange = false;
-    this.timeslots = [];
+    this.classes = [];
     this.arrangedTimeslots = [];
 
     // Methods
@@ -564,23 +500,26 @@ function TimetableDay(timetable, day) {
         this.hasChange = true;
     };
 
-    this.HasClash = function(timeslot) {
-        this.timeslots.forEach(function (otherTimeslot) {
-            var sameSubject = timeslot.subject == otherTimeslot.subject;
-            var differentClassType = timeslot.classType != otherTimeslot.classType;
-            var hasClash = timeslot.ClashWith(otherTimeslot) || otherTimeslot.ClashWith(timeslot);
-            var otherIsTicked = otherTimeslot.ticked;
+    this.HasClash = function(aClass) {
+        this.timeslots.forEach(function (otherClass) {
+            var sameSubject = aClass.subject == otherClass.subject;
+            var differentClassType = aClass.classType != otherClass.classType;
+            var hasClash = aClass.ClashWith(otherClass) || otherClass.ClashWith(aClass);
+            var otherIsTicked = otherClass.ticked;
 
             if((sameSubject? differentClassType: true) && hasClash && otherIsTicked)
-                throw otherTimeslot;
+                throw otherClass;
         });
-
         return false;
     };
 
     this.AddTimeslot = function(timeslot) {
         this.timeslots.push(timeslot);
         return this;
+    };
+
+    this.GetTimeGaps = function() {
+
     };
 
     this.RemoveTimeslot = function(timeslot) {
@@ -638,38 +577,91 @@ function TimetableDay(timetable, day) {
     };
 }
 
+function Subject(timetable, subjectCode, subjectName) {
+
+    // Constructor
+    this.timetable = timetable;
+    this.subjectCode = subjectCode;
+    this.subjectName = subjectName;
+    this.timeslots = [];
+
+    for(var i = 0; i< ClassType.length; i++)
+        this.timeslots.push([]);
+
+    // Methods
+    this.GetAllClasses = function () {
+        var classes = [];
+        this.timeslots.forEach(function (timeslotsByClassType) {
+            timeslotsByClassType.forEach(function (timeslot) {
+                timeslot.classes.forEach(function (aClass) {
+                    classes.push(aClass);
+                });
+            });
+        });
+        return classes;
+    };
+
+    this.AddTimeslot = function (day, startTime, endTime, classType, number, ticked) {
+        var timeslot = new Timeslot(day, startTime, endTime, this, classType, number);
+        timeslot.ticked = ticked;
+        this.timeslots[classType].push(timeslot);
+        return this;
+    };
+
+    this.Tick = function(timeslot) {
+        if(!this.timetable.HasClash(timeslot)) {
+            this.timeslots[timeslot.classType].forEach(function (otherTimeslot) {
+                otherTimeslot.ticked = false;
+            });
+            timeslot.ticked = true;
+            this.timetable.NotifyChanges();
+        }
+        return this;
+    };
+
+    this.GetDetails = function() {
+        return this.subjectCode.concat(' ').concat(this.subjectName);
+    };
+
+    this.Reset = function() {
+        this.timeslots.forEach(function(timeslotByClassType) {
+            timeslotByClassType.forEach(function(timeslot) {
+                timeslot.ticked = false;
+            });
+        });
+    };
+
+    this.ToJSON = function() {
+        var json =  '{'
+            + '"subjectCode":"' + this.subjectCode + '",'
+            + '"subjectName":"' + this.subjectName + '",'
+            + '"timeslots":[';
+        this.timeslots.forEach(function (timeslotByClassType) {
+            timeslotByClassType.forEach(function(timeslot) {
+                json += timeslot.ToJSON() + ',';
+            });
+        });
+        if(json.charAt(json.length - 1) == ',')
+            json = json.substr(0, json.length - 1);
+        json += ']';
+        json += '}';
+        return json;
+    };
+}
+
+
 function Timeslot(subject, classType, number) {
 
     // Constructor
     this.subject = subject;
     this.classType = classType;
+    this.classNumber = classNumber;
     this.number = number;
     this.classes = [];
     this.ticked = false;
 
     // Methods
-    this.AddClass = function (newClass) {
-        this.classes.push(newClass);
-    };
-
-    this.ClashWith = function(otherTimeslot) {
-        var startTimeDifference = this.startTime - otherTimeslot.startTime;
-
-        if(startTimeDifference == 0)
-            return true;
-
-        // This timeslot is later than other class
-        // If this timeslot starts before other timeslot ends, it has clashes
-        else if (startTimeDifference > 0)
-            return this.startTime < otherTimeslot.endTime
-
-        // This timeslot is earlier than other timeslot
-        // If other timeslot have not end when this timeslot starts, it has clashes
-        else
-            return this.endTime > otherTimeslot.startTime;
-    };
-
-    this.Tick = function(tick) {
+    this.Tick = function (tick) {
         if(arguments.length == 0) {
             return this.ticked;
         } else {
@@ -690,21 +682,24 @@ function Timeslot(subject, classType, number) {
         }
     };
 
-    this.TryTick = function(tick) {
-        if(tick) {
-            this.subject.Tick(this);
-        } else {
-            this.ticked = false;
-        }
+    this.GetFullDetails = function() {
+        return this.subject.GetDetails() + this.GetClassNumber();
     };
 
-    this.GetDetails = function() {
-        return this.subject.GetDetails()
-            .concat(' ')
-            .concat(ClassType[classType].charAt(0)).concat(number);
+    this.GetClassNumber = function () {
+        return ClassType[this.classType].charAt(0) + this.number;
     };
 
-    this.ToJSON = function() {
+    this.GetTimeGaps = function () {
+        var timeGaps = [];
+        this.classes.forEach(function (aClass) {
+            timeGaps.push(aClass.startTime);
+            timeGaps.push(aClass.endTime);
+        });
+        return timeGaps;
+    };
+
+    this.ToJSON = function () {
         var json = '{'
             + '"classType":' + this.classType + ','
             + '"number":' + this.number
@@ -721,15 +716,21 @@ function Timeslot(subject, classType, number) {
     };
 }
 
-function Class(day, startTime, endTime) {
+function Class (day, weekType, startTime, endTime) {
 
     // Constructor
     this.day = day;
+    this.weekType = weekType;
     this.startTime = startTime;
     this.endTime = endTime;
 
     // Methods
-    this.ClashWith = function(otherClass) {
+    this.ClashWith = function (otherClass) {
+        return this.ClashTimeWith(otherClass)
+            && this.weekType == otherClass.weekType;
+    };
+
+    this.ClashTimeWith = function (otherClass) {
         var startTimeDifference = this.startTime - otherClass.startTime;
 
         if(startTimeDifference == 0)
@@ -746,24 +747,27 @@ function Class(day, startTime, endTime) {
             return this.endTime > otherClass.startTime;
     };
 
-    this.ToJSON = function() {
+    this.ToJSON = function () {
         return '{'
             + '"day":' + this.day + ','
+            + '"weekType":' + this.weekType + ','
+            + '"classNumber":' + this.classNumber + ','
             + '"startTime":' + this.startTime + ','
             + '"endTime":' + this.endTime
             + '}';
     };
 }
 
-function TimeGap(colSpan, timeslot) {
+// UI related model
+function TimeGap (colSpan, timeslot) {
 
     // Constructor
     this.colSpan = colSpan;
     this.timeslot = timeslot;
 
     // Methods
-    this.GetDetails = function() {
+    this.GetFullDetails = function() {
         if(!this.timeslot) return "";
-        else return this.timeslot.GetDetails();
+        else return this.timeslot.GetFullDetails();
     };
 }

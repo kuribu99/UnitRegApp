@@ -48,7 +48,7 @@
                                     <td ng-repeat="timegap in timetableDay.GetArrangedTimeslots() track by $index"
                                         colspan="{{ timegap.colSpan }}"
                                         class="{{ timegap.timeslot? 'has-timeslot':'' }}">
-                                        {{ timegap.GetDetails() }}
+                                        {{ timegap.GetFullDetails() }}
                                     </td>
                                 </tr>
                             </tbody>
