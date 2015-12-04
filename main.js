@@ -145,7 +145,7 @@ app.controller("unitRegController", function($scope) {
                 timeslot.endTime,
                 timeslot.classType,
                 timeslot.number,
-                (timeslot.ticked == 1));
+                (timeslot.ticked != null && timeslot.ticked == 1));
         });
         return subject;
     };
