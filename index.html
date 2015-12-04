@@ -20,6 +20,7 @@
 					<li class="active"><a data-toggle="tab" href="#home"><span class="bold">UnitRegApp</span></a></li>
 					<li><a data-toggle="tab" href="#about">About</a></li>
 					<li><a data-toggle="tab" href="#feedback">Feedbacks</a></li>
+					<li><a data-toggle="tab" href="#development">Development</a></li>
 				</ul>
 			</nav>
 
@@ -147,6 +148,14 @@
                 <!-- Panel: About -->
 				<div id="about" class="tab-pane fade">
 
+                    <!-- Panel: Objectives -->
+                    <div class="panel panel-default">
+                        <div class="panel-heading bold">Objectives</div>
+                        <div class="panel-body">
+                            <p>This web application allows students to simulate and plan their upcoming trimester's timetable</p>
+                        </div>
+                    </div>
+
                     <!-- Panel: Instruction -->
                     <div class="panel panel-default">
                         <div class="panel-heading bold">Instructions</div>
@@ -180,21 +189,18 @@
 					<div class="panel panel-default">
 						<div class="panel-heading bold">Known Issues</div>
 						<div class="panel-body">
-							<ul>
-								<li>Currently unable to add two classes under one timeslot, for instance, Lecture that have two classes</li>
-								<li>The current solution is to use Tutorial or Practical class to represent</li>
-								<li>If the subject only have Lecture and Tutorial, use Practical represent it</li>
-								<li>Else if it is Lecture and Practical, use Tutorial to represent it</li>
-								<li>I will get this fixed in next update</li>
-							</ul>
-						</div>
-					</div>
-
-                    <!-- Panel: Objectives -->
-					<div class="panel panel-default">
-						<div class="panel-heading bold">Objectives</div>
-						<div class="panel-body">
-							<p>This web application allows students to simulate and plan their upcoming trimester's timetable</p>
+							<ol>
+								<li>
+                                    <p>Currently unable to add two classes under one timeslot, for instance, Lecture that have two classes</p>
+                                    <p>The current solution is to use Tutorial or Practical class to represent</p>
+                                    <p>If the subject only have Lecture and Tutorial, use Practical represent it</p>
+                                    <p>Else if it is Lecture and Practical, use Tutorial to represent it</p>
+                                </li>
+                                <li>
+                                    <p>Odd-Even week timeslots are not supported and will be treated as normal timeslot</p>
+                                    <p>There is no current solution that capable of fixing within short period</p>
+                                </li>
+							</ol>
 						</div>
 					</div>
 
@@ -203,7 +209,6 @@
 						<div class="panel-heading bold">About this website</div>
 						<div class="panel-body">
                             <ul class="li-container">
-                            	<li>Current release: v1.1.0</li>
                                 <li>Hosted directly from <a href="https://github.com/">GitHub</a></li>
                                 <li>Framework used:
                                     CSS (<a href="http://getbootstrap.com/">Bootstrap</a>),
@@ -219,6 +224,110 @@
 				<div id="feedback" class="tab-pane fade">
 					<iframe src="https://docs.google.com/forms/d/1-1NJ7P15HJjqbomkQGUOYJRnYzuEq68fquaGVeuXnYg/viewform?embedded=true"
 							width="660" height="1150" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+                </div>
+
+                <!-- Panel: Development -->
+				<div id="development" class="tab-pane fade">
+
+                    <!-- Pending Changes -->
+                    <div class="container">
+                        <h3 class="h3">Pending Changes</h3>
+                        <table class="table table-hover table-responsive">
+                            <thead>
+                                <tr class="info bold">
+                                    <td>#</td>
+                                    <td>Changes</td>
+                                    <td>Date Added</td>
+                                    <td>Status</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Two classes under same timeslot (E.g.: L1 has two lecture classes)</td>
+                                    <td>04/12/2015</td>
+                                    <td>Working on this</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Odd-Even week classes</td>
+                                    <td>04/12/2015</td>
+                                    <td>Pending</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Edit added subject/timeslot</td>
+                                    <td>04/12/2015</td>
+                                    <td>Pending (after #1 and #2)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Release History -->
+                    <div class="container">
+                        <h3 class="h3">Release History</h3>
+                        <table class="table table-hover table-responsive">
+                            <thead>
+                                <tr class="info bold">
+                                    <td>Release</td>
+                                    <td>Description</td>
+                                    <td>Date</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- v1.1.1 -->
+                                <tr class="success">
+                                    <td>v1.1.1</td>
+                                    <td>
+                                        <p>Develop from Feedback</p>
+                                        <ul>
+                                            <li>Added "Development" panel to list down past release and future pending changes</li>
+                                        </ul>
+                                    </td>
+                                    <td>04/12/2015</td>
+                                </tr>
+                                <!-- v1.1.0 -->
+                                <tr>
+                                    <td>v1.1.0</td>
+                                    <td>
+                                        <p>Copy & Import</p>
+                                        <ul>
+                                            <li>Added "Copy all Subjects" and "Import Subjects" to allow transfer subject data</li>
+                                            <li>Added "Known Issue" panel to list down issue and possible solutions</li>
+                                        </ul>
+                                    </td>
+                                    <td>04/12/2015</td>
+                                </tr>
+                                <!-- v1.0.1 -->
+                                <tr>
+                                    <td>v1.0.1</td>
+                                    <td>
+                                        <p>UI improvement</p>
+                                        <ul>
+                                            <li>Restructured and redesigned UI layout</li>
+                                            <li>Added "About" and "Feedback" panels</li>
+                                        </ul>
+                                    </td>
+                                    <td>03/12/2015</td>
+                                </tr>
+                                <!-- v1.0.0 -->
+                                <tr>
+                                    <td>v1.0.0</td>
+                                    <td>
+                                        <p>First release with basic functionality</p>
+                                        <ul>
+                                            <li>Add/Remove subjects and timeslots</li>
+                                            <li>Preview timetable</li>
+                                            <li>Supports printing</li>
+                                        </ul>
+                                    </td>
+                                    <td>26/11/2015</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
 			</div>
 		</div>
