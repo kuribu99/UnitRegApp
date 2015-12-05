@@ -1,3 +1,4 @@
+// Constants
 const DayInWeek = [
     'Monday',
     'Tuesday',
@@ -7,36 +8,19 @@ const DayInWeek = [
     'Saturday',
     'Sunday'
 ];
-const Monday = 0;
-const Tuesday = 1;
-const Wednesday = 2;
-const Thursday = 3;
-const Friday = 4;
-const Saturday = 5;
-const Sunday = 6;
-
 const ClassType = [
     'Lecture', 'Tutorial', 'Practical'
 ];
-const Lecture = 0;
-const Tutorial = 1;
-const Practical = 2;
-
 const WeekType = [
     'Odd week only',
     'Even week only',
-    'Normal'
+    'Both odd and even week'
 ];
-const OddWeekOnly = 0;
-const EvenWeekOnly = 1;
-const Normal = 2;
 
-const ClassNumber = [
-    'One only',
-    'Two classes'
-];
-const OneClass = 0;
-const TwoClsss = 1;
+// Zoom constants
+const ZoomIn = 1;
+const ZoomOut = -1;
+const ZoomReset = 0;
 
 // Cookie timeout period is 1 month
 const CookieTimeout = 60 * 60 * 24 * 30;
@@ -54,7 +38,53 @@ app.controller("unitRegController", function($scope) {
 
     // Methods
     $scope.To24HourFormat = To24HourFormat;
+    $scope.To12HourFormat = To12HourFormat;
 
+    // UI Methods
+    $scope.Zoom = function (zoom) {
+        var timetableDiv = $('div#timetable-container');
+        var currentScale = timetableDiv.data('scale', 1);
+
+        switch (zoom) {
+            case ZoomIn:
+                if(currentScale < 1.5)
+                    currentScale += 0.1;
+                break;
+            case ZoomOut:
+                if(currentScale > 0.5)
+                    currentScale -= 0.1;
+                break;
+            case ZoomReset:
+                currentScale = 1;
+                break;
+        }
+
+        timetableDiv.css({
+            zoom: currentScale
+        });
+        timetableDiv.data('scale', currentScale);
+    };
+
+    $scope.Print = function () {
+            var print = window.open();
+
+            print.document.write('<html><head><title>Timetable</title>');
+            print.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
+            print.document.write('</head><body >');
+            print.document.write($('div#timetable-container').html());
+            print.document.write('</body></html>');
+
+            print.document.close(); // necessary for IE >= 10
+            print.focus(); // necessary for IE >= 10
+
+            // Wait a while for document.write to complete
+            setTimeout(function() {
+                print.print();
+                print.close();
+            }, 100);
+        };
+
+    // Model Methods
     $scope.NotifyChanges = function () {
         $scope.timetable.NotifyChanges();
     };
@@ -94,11 +124,11 @@ app.controller("unitRegController", function($scope) {
                     hasError = true;
                 }
 
-                if(!ValidTime(timeslot.startTime)) {
+                if(!IsValidTime(timeslot.startTime)) {
                     errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot start time. Acceptable range is 1 to 9\n';
                     hasError = true;
                 }
-                if(!ValidTime(timeslot.endTime)) {
+                if(!IsValidTime(timeslot.endTime)) {
                     errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot end time\n';
                     hasError = true;
                 }
@@ -247,85 +277,76 @@ app.controller("unitRegController", function($scope) {
     $scope.NotifyChanges();
 });
 
-$(document).ready(function() {
-
-    // Initialize datas
-    $('div#timetable-container').data('scale', 1);
-
-    // Add event listeners
-    $('button#zoom-in').click(function () {
-        var timetableDiv = $('div#timetable-container');
-        var currentScale = timetableDiv.data('scale');
-
-        if(currentScale < 1.5) {
-            currentScale += 0.1;
-        }
-
-        timetableDiv.css({
-            zoom: currentScale
-        });
-        timetableDiv.data('scale', currentScale);
-    });
-
-    $('button#zoom-out').click(function () {
-        var timetableDiv = $('div#timetable-container');
-        var currentScale = timetableDiv.data('scale');
-
-        if(currentScale > 0.5) {
-            currentScale -= 0.1;
-        }
-
-        timetableDiv.css({
-            zoom: currentScale
-        });
-        timetableDiv.data('scale', currentScale);
-    });
-
-    $('button#zoom-reset').click(function () {
-        $('div#timetable-container')
-            .css({
-                zoom: 1
-            })
-            .data('scale', 1);
-    });
-
-    $('button#btn-print').click(function () {
-        var print = window.open();
-
-        print.document.write('<html><head><title>Timetable</title>');
-        print.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
-        print.document.write('</head><body >');
-        print.document.write($('div#timetable-container').html());
-        print.document.write('</body></html>');
-
-        print.document.close(); // necessary for IE >= 10
-        print.focus(); // necessary for IE >= 10
-
-        // Wait a while for document.write to complete
-        setTimeout(function() {
-            print.print();
-            print.close();
-        }, 100);
-    });
-});
-
 // Functions
-function To24HourFormat(time) {
-    return time >= 1000? time:
-        time >= 100? '0'.concat(time):
-            '00'.concat(time);
+/**
+ * @return {string}
+ */
+function To24HourFormat (time) {
+    if(time >= 1000)
+        return time;
+    else if (time >= 100)
+        return '0' + time;
+    else if (time >= 10)
+        return '00' + time;
+    else
+        return '000' + time;
 }
 
-function SortTime(timeA, timeB) {
+/**
+ * @return {string}
+ */
+function To12HourFormat (time) {
+    var hour = time % 100;
+    var min = parseInt(time / 100);
+    var type = 'AM';
+
+    // Check for AM/PM
+    if(hour >= 1200 && time < 2400) {
+        hour -= 12;
+        type = 'PM';
+    }
+    else if (time == 2400) {
+        hour -= 12;
+    }
+
+    // 0 hour is shown as 12
+    if(hour == 0)
+        hour = 12;
+
+    // Make leading zer
+    if(hour < 10)
+        hour = '0' + hour;
+    if(min < 10)
+        min = '0' + min;
+    return hour + ':' + min + type;
+}
+
+/**
+ * @return {number}
+ */
+function CompareTime (timeA, timeB) {
     return timeA - timeB;
 }
 
-function ValidTime(time) {
+/**
+ * @return {boolean}
+ */
+function IsValidTime (time) {
     return time >= 0 && time <= 2400 && time % 100 < 60;
 }
 
+/**
+ * @returns {string}
+ */
+function RemoveEndingComma (input) {
+    var result = input;
+    if(input.charAt(json.length - 1) == ',')
+        input = input.substr(0, json.length - 1);
+    return input;
+}
+
 // Model Classes
-function Timetable() {
+function Timetable () {
 
     // Constructor
     this.gap = 30;
@@ -386,7 +407,7 @@ function Timetable() {
                 this.AddTimeGaps(timetableDay.GetTimeGaps());
             }, this);
 
-            this.timeGaps.sort(SortTime);
+            this.timeGaps.sort(CompareTime);
             this.hasChange = false;
         }
         return this.timeGaps;
@@ -486,7 +507,7 @@ function Timetable() {
     }
 }
 
-function TimetableDay(timetable, day) {
+function TimetableDay (timetable, day) {
 
     // Constructor
     this.timetable = timetable;
@@ -577,7 +598,7 @@ function TimetableDay(timetable, day) {
     };
 }
 
-function Subject(timetable, subjectCode, subjectName) {
+function Subject (timetable, subjectCode, subjectName) {
 
     // Constructor
     this.timetable = timetable;
@@ -650,29 +671,28 @@ function Subject(timetable, subjectCode, subjectName) {
 }
 
 
-function Timeslot(subject, classType, number) {
+function Timeslot (subject, classType, number) {
 
     // Constructor
     this.subject = subject;
     this.classType = classType;
-    this.classNumber = classNumber;
     this.number = number;
     this.classes = [];
     this.ticked = false;
 
     // Methods
+    /**
+     * @return {boolean}
+     */
     this.Tick = function (tick) {
-        if(arguments.length == 0) {
-            return this.ticked;
-        } else {
+        if(arguments.length == 1) {
             if(tick) {
                 try {
                     this.subject.Tick(this);
                 }
                 catch (timeslot) {
-                    alert('Unable to tick this timeslot. Has clashes with:\n'
-                        + timeslot.subject.subjectCode + ' ' + timeslot.subject.subjectName + ' '
-                        + ClassType[timeslot.classType].charAt(0) + timeslot.number);
+                    alert('Unable to tick this timeslot. Clashed with:\n'
+                        + timeslot.GetDetails());
                 }
             }
             else {
@@ -680,16 +700,26 @@ function Timeslot(subject, classType, number) {
                 this.subject.timetable.NotifyChanges();
             }
         }
+        return this.ticked;
     };
 
-    this.GetFullDetails = function() {
-        return this.subject.GetDetails() + this.GetClassNumber();
+    /**
+     * @return {string}
+     */
+    this.GetDetails = function() {
+        return this.subject.GetDetails() + ' ' + this.GetTimeslotDetails();
     };
 
-    this.GetClassNumber = function () {
+    /**
+     * @return {string}
+     */
+    this.GetTimeslotDetails = function () {
         return ClassType[this.classType].charAt(0) + this.number;
     };
 
+    /**
+     * @returns {Array}
+     */
     this.GetTimeGaps = function () {
         var timeGaps = [];
         this.classes.forEach(function (aClass) {
@@ -699,6 +729,9 @@ function Timeslot(subject, classType, number) {
         return timeGaps;
     };
 
+    /**
+     * @return {string}
+     */
     this.ToJSON = function () {
         var json = '{'
             + '"classType":' + this.classType + ','
@@ -716,20 +749,28 @@ function Timeslot(subject, classType, number) {
     };
 }
 
-function Class (day, weekType, startTime, endTime) {
+function Class (timeslot, venue, day, weekType, startTime, endTime) {
 
     // Constructor
+    this.timeslot = timeslot;
+    this.venue = venue;
     this.day = day;
     this.weekType = weekType;
     this.startTime = startTime;
     this.endTime = endTime;
 
     // Methods
+    /**
+     * @return {boolean}
+     */
     this.ClashWith = function (otherClass) {
         return this.ClashTimeWith(otherClass)
             && this.weekType == otherClass.weekType;
     };
 
+    /**
+     * @return {boolean}
+     */
     this.ClashTimeWith = function (otherClass) {
         var startTimeDifference = this.startTime - otherClass.startTime;
 
@@ -739,7 +780,7 @@ function Class (day, weekType, startTime, endTime) {
         // This class is later than other class
         // If this class starts before other class ends, it has clashes
         else if (startTimeDifference > 0)
-            return this.startTime < otherClass.endTime
+            return this.startTime < otherClass.endTime;
 
         // This class is earlier than other class
         // If other class have not end when this class starts, it has clashes
@@ -747,11 +788,21 @@ function Class (day, weekType, startTime, endTime) {
             return this.endTime > otherClass.startTime;
     };
 
+    /**
+     * @return {string}
+     */
+    this.GetDetails = function () {
+        return this.timeslot.GetDetails();
+    };
+
+    /**
+     * @return {string}
+     */
     this.ToJSON = function () {
         return '{'
+            + '"venue":"' + this.venue + '",'
             + '"day":' + this.day + ','
             + '"weekType":' + this.weekType + ','
-            + '"classNumber":' + this.classNumber + ','
             + '"startTime":' + this.startTime + ','
             + '"endTime":' + this.endTime
             + '}';
@@ -759,15 +810,21 @@ function Class (day, weekType, startTime, endTime) {
 }
 
 // UI related model
-function TimeGap (colSpan, timeslot) {
+function TimeGap (aClass, colSpan, rowSpan) {
 
     // Constructor
+    this.aClass = aClass;
     this.colSpan = colSpan;
-    this.timeslot = timeslot;
+    this.rowSpan = rowSpan;
 
     // Methods
-    this.GetFullDetails = function() {
-        if(!this.timeslot) return "";
-        else return this.timeslot.GetFullDetails();
+    /**
+     * @return {string}
+     */
+    this.GetDetails = function () {
+        if (this.aClass != null)
+            return this.aClass.GetDetails();
+        else
+            return '';
     };
 }
