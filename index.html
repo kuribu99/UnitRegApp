@@ -68,31 +68,27 @@
                             <label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
                                 <input type="radio" name="options"> 1 hour </label>
                         </div>
-                        <button class="btn btn-default"
-                                ng-click="AddDummyData()">
-                            <span>Add Dummy Data</span>
-                        </button>
-                        <button id="open-add-subject-modal" type="button" class="btn btn-default"
+                        <button type="button" class="btn btn-default"
                                 data-toggle="modal"
                                 data-target="#AddSubjectModal">
                             <strong>Add Subject</strong>
                         </button>
-                        <button id="zoom-in" class="btn btn-default" ng-click="Zoom(1)">
+                        <button class="btn btn-default" ng-click="Zoom(1)">
                             <span> Zoom In</span>
                         </button>
-                        <button id="zoom-out" class="btn btn-default" ng-click="Zoom(-1)">
+                        <button class="btn btn-default" ng-click="Zoom(-1)">
                             <span>Zoom Out</span>
                         </button>
-                        <button id="zoom-reset" class="btn btn-default" ng-click="Zoom(0)">
+                        <button class="btn btn-default" ng-click="Zoom(0)">
                             <span>Reset Zoom</span>
                         </button>
-                        <button id="btn-print" class="btn btn-default" ng-click="Print()">
+                        <button class="btn btn-default" ng-click="Print()">
                             <span>Print</span>
                         </button>                        
-                        <button id="btn-copy" class="btn btn-default" ng-click="Copy()">
+                        <button class="btn btn-default" ng-click="Copy()">
                             <span>Copy all Subjects</span>
                         </button>
-                        <button id="btn-import" class="btn btn-default" ng-click="ImportSubjects()">
+                        <button class="btn btn-default" ng-click="ImportSubjects()">
                             <span>Import Subjects</span>
                         </button>
                     </div>

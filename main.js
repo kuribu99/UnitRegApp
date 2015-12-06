@@ -10,10 +10,20 @@ const DayInWeek = [
     'Saturday',
     'Sunday'
 ];
+const Monday = 0;
+const Tuesday = 1;
+const Wednesday = 2;
+const Thursday = 3;
+const Friday = 4;
+const Saturday = 5;
+const Sunday = 6;
 
 const ClassType = [
     'Lecture', 'Tutorial', 'Practical'
 ];
+const Lecture = 0;
+const Tutorial = 1;
+const Practical = 2;
 
 const WeekType = [
     'Odd week only',
@@ -32,16 +42,17 @@ const ZoomReset = 0;
 // Cookie timeout period is 1 month
 const CookieTimeout = 60 * 60 * 24 * 30;
 
+// Regex to validate text
+const TextRegex = /[^A-Za-z0-9 -]/;
+
 // Controller
 var app = angular.module("unitRegApp", []);
 app.controller("unitRegController", function($scope) {
 
     // Variables
-    $scope.DayInWeek = DayInWeek;
-    $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
-    $scope.newSubject = new Subject($scope.timetable, EmptyString, EmptyString);
-    $scope.newTimeslots = [];
+    $scope.newSubject = CreateNewSubject();
+    $scope.editSubject = $scope.newSubject;
 
     // Methods
     $scope.To24HourFormat = To24HourFormat;
@@ -97,87 +108,21 @@ app.controller("unitRegController", function($scope) {
     };
 
     $scope.AddNewSubject = function () {
-        var hasError = false;
-        var errorMsg = 'Please validate the following:\n';
-
-        // Validation
-        if($scope.newSubject.subjectCode.length == 0) {
-            errorMsg += 'Subject code cannot be empty\n';
-            hasError = true;
-        }
-        if($scope.newSubject.subjectName.length == 0) {
-            errorMsg += 'Subject name cannot be empty\n';
-            hasError = true;
-        }
-        if($scope.newTimeslots.length == 0) {
-            errorMsg += 'At least one timeslot is required\n';
-            hasError = true;
-        }
+        var errorTrace = new ErrorTrace();
+        $scope.newSubject.Validate(errorTrace);
+        if(errorTrace.HasError())
+            errorTrace.AlertErrors();
         else {
-            var arr = [];
-            $scope.newTimeslots.forEach(function (timeslot) {
-                var number;
-                try {
-                    if(timeslot.number.length == 0)
-                        throw false;
-                    number = parseInt(timeslot.number);
-                }
-                catch(e) {
-                    number = -1;
-                }
-
-                if (number <= 0 || number > 19) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot number. Acceptable range is 1 to 9\n';
-                    hasError = true;
-                }
-
-                if(!IsValidTime(timeslot.startTime)) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot start time. Acceptable range is 1 to 9\n';
-                    hasError = true;
-                }
-                if(!IsValidTime(timeslot.endTime)) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Invalid timeslot end time\n';
-                    hasError = true;
-                }
-                if(timeslot.startTime > timeslot.endTime) {
-                    errorMsg += 'Timeslot ' + ($scope.newTimeslots.indexOf(timeslot) + 1) + ': Start time cannot be later than end time\n';
-                    hasError = true;
-                }
-
-                // Add timeslot number for next validation
-                if(number > 0)
-                    arr.push(ClassType[timeslot.classType].charAt(0) + number);
-            }, $scope);
-
-            var item;
-            var hasDuplicate = [];  // To prevent repeating validation
-            while (arr.length > 1) {
-                item = arr.pop();
-                if(arr.indexOf(item) >= 0 && hasDuplicate.indexOf(item) < 0) {
-                    errorMsg += 'Duplicate timeslot: ' + item + '\n';
-                    hasError = true;
-                    hasDuplicate.push(item);
-                }
-            }
-        }
-
-        if(hasError) {
-            alert(errorMsg);
-        }
-        else {
-            $scope.newTimeslots.forEach(function (timeslot) {
-                this.newSubject.AddTimeslot(timeslot.day, timeslot.startTime, timeslot.endTime, timeslot.classType, timeslot.number, false);
-            }, $scope);
-
             $scope.timetable.AddSubject($scope.newSubject);
-
-            $scope.newSubject = new Subject($scope.timetable, EmptyString, EmptyString);
-            while ($scope.newTimeslots.length > 0)
-                $scope.newTimeslots.pop();
-
-            // Add at least one timeslot for the new subject
-            $scope.AddNewTimeslot();
+            $scope.newSubject = $scope.CreateNewSubject();
         }
+    };
+
+    $scope.CreateNewSubject = function () {
+        var subject = new Subject($scope.timetable, EmptyString, EmptyString);
+        var timeslot = $scope.newSubject.AddTimeslot(Lecture, 0);
+        timeslot.AddClass('KB520', Monday, BothWeeks, 800, 1000);
+        return subject;
     };
 
     $scope.AddNewTimeslot = function () {
@@ -197,39 +142,22 @@ app.controller("unitRegController", function($scope) {
             var ticked = false;
             try {
                 ticked = timeslot.ticked != null && timeslot.ticked == 1;
-            } catch (e) {}
-            subject.AddTimeslot(timeslot.day,
-                timeslot.startTime,
-                timeslot.endTime,
-                timeslot.classType,
-                timeslot.number,
-                ticked);
+            } catch (e) {
+                ticked = false;
+            }
+            var slot = subject.AddTimeslot(timeslot.classType, timeslot.number);
+            slot.ticked = ticked;
+
+            // Release 1.x.x timeslot type
+            if(timeslot.classes == null) {
+                slot.AddClass('KB520', timeslot.day, BothWeeks, timeslot.startTime, timeslot.endTime);
+            }
+            // Release 2.0 onwards
+            else {
+                // TODO: make it tally with new JSON format
+            }
         });
         return subject;
-    };
-
-    $scope.AddDummyData = function() {
-        if(confirm('This will add 3 dummy subjects, proceed?')) {
-            var web = new Subject($scope.timetable, 'UECS2014', 'Web Application Development (Dummy Data)');
-            web.AddTimeslot(Monday, 900, 1300, Lecture, 1)
-                .AddTimeslot(Tuesday, 900, 1400, Lecture, 2)
-                .AddTimeslot(Monday, 1200, 1400, Tutorial, 1)
-                .AddTimeslot(Wednesday, 1200, 1400, Practical, 1)
-                .AddTimeslot(Thursday, 1200, 1300, Practical, 2);
-            $scope.timetable.AddSubject(web);
-
-            var fyp = new Subject($scope.timetable, 'UECS3114', 'Project I (Dummy Data)');
-            fyp.AddTimeslot(Tuesday, 1200, 1400, Lecture, 1)
-                .AddTimeslot(Tuesday, 1400, 1600, Lecture, 2)
-                .AddTimeslot(Friday, 830, 1030, Practical, 1)
-                .AddTimeslot(Friday, 1430, 1630, Practical, 2);
-            $scope.timetable.AddSubject(fyp);
-
-            var tp = new Subject($scope.timetable, 'UECS3004', 'Team Project (Dummy Data)');
-            tp.AddTimeslot(Thursday, 1600, 1800, Lecture, 1)
-                .AddTimeslot(Saturday, 1000, 1600, Practical, 1);
-            $scope.timetable.AddSubject(tp);
-        }
     };
 
     $scope.Copy = function() {
@@ -276,9 +204,6 @@ app.controller("unitRegController", function($scope) {
             }
         }
     });
-
-    // Add at least one timeslot for the new subject
-    $scope.AddNewTimeslot();
 
     // Update the changes
     $scope.NotifyChanges();
@@ -340,6 +265,13 @@ function CompareTime (timeA, timeB) {
  */
 function IsValidTime (time) {
     return time >= 0 && time <= 2400 && time % 100 < 60;
+}
+
+/**
+ * @return {boolean}
+ */
+function ContainInvalidText (text) {
+    return TextRegex.test(text);
 }
 
 /**
@@ -611,6 +543,12 @@ function Subject (timetable, subjectCode, subjectName) {
         this.timeslots.push([]);
 
     // Methods
+    this.AddTimeslot = function (classType, number) {
+        var timeslot = new Timeslot(this, classType, number);
+        this.timeslots[classType].push(timeslot);
+        return timeslot;
+    };
+
     /**
      * @returns {Array}
      */
@@ -624,13 +562,6 @@ function Subject (timetable, subjectCode, subjectName) {
             });
         });
         return classes;
-    };
-
-    this.CreateTimeslot = function (classType, number, ticked) {
-        var timeslot = new Timeslot(this, classType, number);
-        timeslot.ticked = ticked;
-        this.timeslots[classType].push(timeslot);
-        return timeslot;
     };
 
     this.Tick = function(timeslot) {
@@ -656,6 +587,41 @@ function Subject (timetable, subjectCode, subjectName) {
                 timeslot.ticked = false;
             });
         });
+    };
+
+    this.Validate = function (errorTrace) {
+        if(this.subjectCode.length == 0)
+            errorTrace.errors.push('Subject code cannot be empty');
+        else if(ContainInvalidText(this.subjectCode))
+            errorTrace.errors.push('Subject code contain invalid character');
+
+        if(this.subjectName.length == 0)
+            errorTrace.errors.push('Subject name cannot be empty');
+        else if(ContainInvalidText(this.subjectName))
+            errorTrace.errors.push('Subject name contain invalid character');
+
+        if(this.timeslots.length == 0)
+            errorTrace.errors.push('At least one timeslot is required');
+        else {
+            var arr = [];
+            var timeslotIndex = 1;
+            this.timeslots.forEach(function (timeslot) {
+                timeslot.Validate(errorTrace, timeslotIndex++);
+
+                // Add for duplicate validation
+                arr.push(timeslot.GetTimeslotDetails());
+            }, this);
+
+            var item;
+            var hasDuplicate = [];
+            while (arr.length > 1) {
+                item = arr.pop();
+                if(arr.indexOf(item) >= 0 && hasDuplicate.indexOf(item) < 0) {
+                    errorTrace.push('Duplicate timeslot: ' + item);
+                    hasDuplicate.push(item);
+                }
+            }
+        }
     };
 
     /**
@@ -689,7 +655,7 @@ function Timeslot (subject, classType, number) {
     this.ticked = false;
 
     // Methods
-    this.CreateClass = function (venue, day, weekType, startTime, endTime) {
+    this.AddClass = function (venue, day, weekType, startTime, endTime) {
         var aClass = new Class(this, venue, day, weekType, startTime, endTime);
         this.classes.push(aClass);
         return aClass;
@@ -743,6 +709,25 @@ function Timeslot (subject, classType, number) {
         return timeGaps;
     };
 
+    this.Validate = function (errorTrace, timeslotIndex) {
+        try {
+            this.number = parseInt(this.number);
+        }
+        catch (e) {
+            this.number = 0;
+        }
+        if(this.number <= 0 || this.number > 19)
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ': Invalid class number, valid range is from 1 to 19');
+        if(this.classes.length == 0)
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ': At least one class is required');
+        else {
+            var classIndex = 1;
+            this.classes.forEach(function (timeslot) {
+                timeslot.Validate(errorTrace, timeslotIndex, classIndex++);
+            });
+        }
+    };
+
     /**
      * @return {string}
      */
@@ -774,12 +759,30 @@ function Class (timeslot, venue, day, weekType, startTime, endTime) {
     this.endTime = endTime;
 
     // Methods
+    this.Validate = function (errorTrace, timeslotIndex, classIndex) {
+        if (this.venue.length == 0)
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ' Class ' + classIndex + ': Venue cannot be empty');
+        else if (ContainInvalidText(this.venue))
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ' Class ' + classIndex + ': Venue contain invalid character');
+
+        if (!IsValidTime(this.startTime))
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ' Class ' + classIndex + ': Invalid class start time');
+        if (!IsValidTime(this.endTime))
+            errorTrace.errors.push('Timeslot ' + timeslotIndex + ' Class ' + classIndex + ': Invalid class end time');
+    };
+
     /**
      * @return {boolean}
      */
     this.ClashWith = function (otherClass) {
-        return this.ClashTimeWith(otherClass)
-            && this.weekType == otherClass.weekType;
+        var clashTime = this.ClashTimeWith(otherClass);
+        var clashClassType = false;
+        if(this.weekType == BothWeeks || otherClass.weekType == BothWeeks)
+            clashClassType = true;
+        else
+            clashClassType = (this.weekType == otherClass.weekType);
+
+        return clashTime && clashClassType;
     };
 
     /**
@@ -820,6 +823,33 @@ function Class (timeslot, venue, day, weekType, startTime, endTime) {
             + '"startTime":' + this.startTime + ','
             + '"endTime":' + this.endTime
             + '}';
+    };
+}
+
+function ErrorTrace () {
+
+    // Constructor
+    this.errors = [];
+
+    // Methods
+    /**
+     * @return {boolean}
+     */
+    this.HasError = function () {
+        return this.errors.length > 0;
+    };
+
+    this.AlertErrors = function () {
+        if(! this.HasError) return;
+
+        var errorMsg = 'Please validate the following:\n';
+        this.errors.forEach(function(error) {
+            errorMsg += '- ' + error + '\n';
+        });
+        if(errorMsg.charAt(errorMsg.length - 1) == '\n')
+            errorMsg.substr(0, errorMsg.length - 1);
+
+        alert(errorMsg);
     };
 }
 
