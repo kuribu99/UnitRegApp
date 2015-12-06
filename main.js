@@ -1,4 +1,6 @@
 // Constants
+const EmptyString = '';
+
 const DayInWeek = [
     'Monday',
     'Tuesday',
@@ -8,14 +10,19 @@ const DayInWeek = [
     'Saturday',
     'Sunday'
 ];
+
 const ClassType = [
     'Lecture', 'Tutorial', 'Practical'
 ];
+
 const WeekType = [
     'Odd week only',
     'Even week only',
     'Both odd and even week'
 ];
+const OddWeekOnly = 0;
+const EvenWeekOnly = 1;
+const BothWeeks = 2;
 
 // Zoom constants
 const ZoomIn = 1;
@@ -33,7 +40,7 @@ app.controller("unitRegController", function($scope) {
     $scope.DayInWeek = DayInWeek;
     $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
-    $scope.newSubject = new Subject($scope.timetable, '', '');
+    $scope.newSubject = new Subject($scope.timetable, EmptyString, EmptyString);
     $scope.newTimeslots = [];
 
     // Methods
@@ -164,7 +171,7 @@ app.controller("unitRegController", function($scope) {
 
             $scope.timetable.AddSubject($scope.newSubject);
 
-            $scope.newSubject = new Subject($scope.timetable, '', '');
+            $scope.newSubject = new Subject($scope.timetable, EmptyString, EmptyString);
             while ($scope.newTimeslots.length > 0)
                 $scope.newTimeslots.pop();
 
@@ -531,12 +538,6 @@ function TimetableDay (timetable, day) {
             if((sameSubject? differentClassType: true) && hasClash && otherIsTicked)
                 throw otherClass;
         });
-        return false;
-    };
-
-    this.AddTimeslot = function(timeslot) {
-        this.timeslots.push(timeslot);
-        return this;
     };
 
     this.GetTimeGaps = function() {
@@ -610,6 +611,9 @@ function Subject (timetable, subjectCode, subjectName) {
         this.timeslots.push([]);
 
     // Methods
+    /**
+     * @returns {Array}
+     */
     this.GetAllClasses = function () {
         var classes = [];
         this.timeslots.forEach(function (timeslotsByClassType) {
@@ -622,11 +626,11 @@ function Subject (timetable, subjectCode, subjectName) {
         return classes;
     };
 
-    this.AddTimeslot = function (day, startTime, endTime, classType, number, ticked) {
-        var timeslot = new Timeslot(day, startTime, endTime, this, classType, number);
+    this.CreateTimeslot = function (classType, number, ticked) {
+        var timeslot = new Timeslot(this, classType, number);
         timeslot.ticked = ticked;
         this.timeslots[classType].push(timeslot);
-        return this;
+        return timeslot;
     };
 
     this.Tick = function(timeslot) {
@@ -637,11 +641,13 @@ function Subject (timetable, subjectCode, subjectName) {
             timeslot.ticked = true;
             this.timetable.NotifyChanges();
         }
-        return this;
     };
 
+    /**
+     * @return {string}
+     */
     this.GetDetails = function() {
-        return this.subjectCode.concat(' ').concat(this.subjectName);
+        return this.subjectCode + ' ' + this.subjectName;
     };
 
     this.Reset = function() {
@@ -652,6 +658,9 @@ function Subject (timetable, subjectCode, subjectName) {
         });
     };
 
+    /**
+     * @return {string}
+     */
     this.ToJSON = function() {
         var json =  '{'
             + '"subjectCode":"' + this.subjectCode + '",'
@@ -670,7 +679,6 @@ function Subject (timetable, subjectCode, subjectName) {
     };
 }
 
-
 function Timeslot (subject, classType, number) {
 
     // Constructor
@@ -681,6 +689,12 @@ function Timeslot (subject, classType, number) {
     this.ticked = false;
 
     // Methods
+    this.CreateClass = function (venue, day, weekType, startTime, endTime) {
+        var aClass = new Class(this, venue, day, weekType, startTime, endTime);
+        this.classes.push(aClass);
+        return aClass;
+    };
+
     /**
      * @return {boolean}
      */
@@ -825,6 +839,6 @@ function TimeGap (aClass, colSpan, rowSpan) {
         if (this.aClass != null)
             return this.aClass.GetDetails();
         else
-            return '';
+            return EmptyString;
     };
 }
