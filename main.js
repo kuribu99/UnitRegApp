@@ -1,16 +1,7 @@
 // Constants
 const AppName = 'unitRegApp';
 const ControllerName = 'unitRegController';
-
-// Strings
 const EmptyString = '';
-const AM = 'AM';
-const PM = 'PM';
-const Copy = 'Copy';
-const MessageCopied = 'Subject data copied to clipboard. Use "Import Subject" to add them back';
-const MessageImportSubject = 'Please paste subject data here';
-const MessageInvalidData = 'Invalid data';
-const MessageRemoveSubject = 'Are you sure to delete this subject?';
 
 // Day in week
 const DayInWeek = [
@@ -58,22 +49,11 @@ const ZoomMax = 1.5;
 const ZoomDefault = 1;
 const ZoomData = 'scale';
 
-// Timetable Div
-const TimetableContainer = 'div#timetable-container';
-
 // Json related data
-const JsonTicked = 1;
-const JsonNotTicked = 0;
-const JsonHeader = 'SubjectData:';
-const JsonTimeGap = 'TimeGap';
+const TimeslotTicked = 1;
+const TimeslotNotTicked = 0;
 
 // Cookie related data
-const CookieExpire = 'expires=';
-const CookieExpireTime = 'Thu, 01 Jan 1970 00:00:00 UTC';
-const CookieTimeGap = 'TimeGap=';
-const TimeGap30 = 30;
-const TimeGap60 = 60;
-const CookieTimeFormat = 'TimeFormat=';
 const TimeFormat12 = 0;
 const TimeFormat24 = 1;
 
@@ -82,13 +62,6 @@ const CookieTimeout = 60 * 60 * 24 * 30;
 
 // Regex to validate text
 const TextRegex = /[^A-Za-z0-9 -]/;
-
-// Model default data
-const DefaultClassNumber = 1;
-const DefaultStartTime = 800;
-const DefaultClassGap = 200;
-const DefaultEndTime = 1800;
-const DefaultVenue = 'KB520';
 
 // Functions
 /**
@@ -111,12 +84,12 @@ function To24HourFormat (time) {
 function To12HourFormat (time) {
     var hour = time % 100;
     var min = parseInt(time / 100);
-    var type = AM;
+    var type = 'AM';
 
     // Check for AM/PM
     if(hour >= 1200 && time < 2400) {
         hour -= 12;
-        type = PM;
+        type = 'PM';
     }
     else if (time == 2400) {
         hour -= 12;
@@ -180,7 +153,7 @@ app.controller(ControllerName, function($scope) {
 
     // UI Methods
     $scope.Zoom = function (zoom) {
-        var timetableDiv = $(TimetableContainer);
+        var timetableDiv = $('div#timetable-container');
         var currentScale = timetableDiv.data(ZoomData, ZoomDefault);
 
         switch (zoom) {
@@ -209,7 +182,7 @@ app.controller(ControllerName, function($scope) {
         print.document.write('<html><head><title>Timetable</title>');
         print.document.write('<link rel="stylesheet" href="main.css" type="text/css" />');
         print.document.write('</head><body >');
-        print.document.write($(TimetableContainer).html());
+        print.document.write($('div#timetable-container').html());
         print.document.write('</body></html>');
 
         print.document.close(); // necessary for IE >= 10
@@ -240,8 +213,8 @@ app.controller(ControllerName, function($scope) {
 
     $scope.CreateNewSubject = function () {
         var subject = new Subject($scope.timetable, EmptyString, EmptyString);
-        var timeslot = subject.AddTimeslot(Lecture, DefaultClassNumber);
-        timeslot.AddClass(DefaultVenue, Monday, BothWeeks, DefaultStartTime, DefaultStartTime + DefaultClassGap);
+        var timeslot = subject.AddTimeslot(Lecture, 1);
+        timeslot.AddClass('KB520', Monday, BothWeeks, 800, 800 + 200);
         return subject;
     };
 
@@ -252,7 +225,7 @@ app.controller(ControllerName, function($scope) {
         data.timeslots.forEach(function(timeslot) {
             var ticked = false;
             try {
-                ticked = timeslot.ticked != null && timeslot.ticked == JsonTicked;
+                ticked = timeslot.ticked != null && timeslot.ticked == TimeslotTicked;
             } catch (e) {
                 ticked = false;
             }
@@ -261,7 +234,7 @@ app.controller(ControllerName, function($scope) {
 
             // Release 1.x.x timeslot type
             if(timeslot.classes == null) {
-                slot.AddClass(DefaultVenue, timeslot.day, BothWeeks, timeslot.startTime, timeslot.endTime);
+                slot.AddClass('KB520', timeslot.day, BothWeeks, timeslot.startTime, timeslot.endTime);
             }
             // Release 2.0 onwards
             else {
@@ -274,13 +247,13 @@ app.controller(ControllerName, function($scope) {
     $scope.Copy = function() {
         var json = $scope.timetable.GetSubjectsAsJSON();
         var temp = $('<input type="text">').val(json).appendTo('body').select();
-        document.execCommand(Copy);
+        document.execCommand('Copy');
         temp.remove();
-        alert(MessageCopied);
+        alert('Subject data copied to clipboard. Use "Import Subject" to add them back');
     };
 
     $scope.ImportSubjects = function() {
-        var json = prompt(MessageImportSubject);
+        var json = prompt('Please paste subject data here');
         if(json != null && json.length > 0) {
             try {
                 var subjects = JSON.parse(json);
@@ -289,7 +262,7 @@ app.controller(ControllerName, function($scope) {
                 }, this);
             }
             catch(e) {
-                alert(MessageInvalidData);
+                alert('Invalid data');
             }
         }
     };
@@ -298,7 +271,7 @@ app.controller(ControllerName, function($scope) {
     var cookieData = document.cookie.split(';');
     cookieData.forEach(function(cookie) {
         if(cookie && cookie.length > 0) {
-            if(cookie.indexOf(JsonHeader) >= 0) {
+            if(cookie.indexOf('SubjectData:') >= 0) {
                 var subjectJson = cookie.substr(json.indexOf('=') + 1);
 
                 // Verify that this cookie is subject data
@@ -309,11 +282,11 @@ app.controller(ControllerName, function($scope) {
                     catch(e) {}
                 }
             }
-            else if (cookie.indexOf(CookieTimeGap) >= 0) {
+            else if (cookie.indexOf('TimeGap=') >= 0) {
                 var gap = cookie.substr(cookie.indexOf('=') + 1);
                 $scope.timetable.Gap(parseInt(gap));
             }
-            else if (json.indexOf(CookieTimeFormat) >= 0) {
+            else if (json.indexOf('TimeFormat=') >= 0) {
                 var timeFormat = cookie.substr(cookie.indexOf('=') + 1);
                 $scope.timetable.TimeFormat(parseInt(timeFormat));
             }
@@ -337,7 +310,7 @@ app.controller(ControllerName, function($scope) {
 function Timetable () {
 
     // Constructor
-    this.gap = TimeGap60;
+    this.gap = 60;
     this.timeFormat = TimeFormat24;
     this.subjects = [];
     this.timetableDays = [];
@@ -357,6 +330,9 @@ function Timetable () {
         });
     };
 
+    /**
+     * @return {number}
+     */
     this.Gap = function (gap) {
         if(arguments.length == 0) {
             return this.gap;
@@ -367,8 +343,8 @@ function Timetable () {
                 var expireDate = new Date();
                 expireDate.setTime(expireDate.getTime() + CookieTimeout);
 
-                document.cookie = CookieTimeGap + this.gap + ';'
-                    + CookieExpire + expireDate.toUTCString();
+                document.cookie = 'TimeGap=' + this.gap + ';'
+                    +  'expires=' + expireDate.toUTCString();
 
                 this.NotifyChanges();
             }
@@ -385,8 +361,8 @@ function Timetable () {
                 var expireDate = new Date();
                 expireDate.setTime(expireDate.getTime() + CookieTimeout);
 
-                document.cookie = CookieTimeFormat + this.TimeFormat + ';'
-                    + CookieExpire + expireDate.toUTCString();
+                document.cookie = 'TimeFormat=' + this.TimeFormat + ';'
+                    +  'expires=' + expireDate.toUTCString();
 
                 this.NotifyChanges();
             }
@@ -402,7 +378,7 @@ function Timetable () {
                 this.timeGaps.pop();
 
             // Add default time gaps
-            for(var i = DefaultStartTime; i <= DefaultEndTime; i+= this.gap) {
+            for(var i = 800; i <= 1800; i+= this.gap) {
                 if(i % 100 >= 60)
                     i+= 100 - i; // Round up to nearest hour
                 this.timeGaps.push(i);
@@ -444,17 +420,17 @@ function Timetable () {
         var expireDate = new Date();
         expireDate.setTime(expireDate.getTime() + CookieTimeout);
 
-        document.cookie = JsonHeader + subject.subjectCode + '=' + subject.ToJSON() + ';'
-            + CookieExpire + expireDate.toUTCString();
+        document.cookie = 'SubjectData:' + subject.subjectCode + '=' + subject.ToJSON() + ';'
+            +  'expires=' + expireDate.toUTCString();
     };
 
     this.RemoveSubjectFromCookie = function(subject) {
-        document.cookie = JsonHeader + subject.subjectCode + '=' + EmptyString + ';'
-            + CookieExpire + CookieExpireTime;
+        document.cookie = 'SubjectData:' + subject.subjectCode + '=' + EmptyString + ';'
+            +  'expires=' +  'Thu, 01 Jan 1970 00:00:00 UTC';
     };
 
     this.RemoveSubject = function(subject) {
-        if(confirm(MessageRemoveSubject)) {
+        if(confirm('Are you sure to delete this subject?')) {
             var classes = subject.GetAllClasses();
 
             classes.forEach(function(aClass) {

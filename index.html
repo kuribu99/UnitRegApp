@@ -35,11 +35,13 @@
                         <table id="timetable" class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <td></td>
-                                    <td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
-                                        ng-if="!$last">
-                                        {{ To24HourFormat(timeGap) }}<br/>{{ To24HourFormat(timeGaps[$index + 1]) }}
-                                    </td>
+                                    <td><!-- Empty cell between first row and column --></td>
+
+                                    {{ timetable.GetArrangedTimeGaps() }}
+                                    <!--<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"-->
+                                        <!--ng-if="!$last">-->
+                                        <!--{{ timetable.timeFormat(timeGap) }}<br/>{{ timetable.timeFormat(timeGaps[$index + 1]) }}-->
+                                    <!--</td>-->
                                 </tr>
                             </thead>
                             <tbody>
