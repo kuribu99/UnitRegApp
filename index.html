@@ -3,7 +3,7 @@
 	<head>
 		<title>UnitRegApp</title>
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 		<script src="main.js"></script>
@@ -36,12 +36,10 @@
                             <thead>
                                 <tr>
                                     <td><!-- Empty cell between first row and column --></td>
-
-                                    {{ timetable.GetArrangedTimeGaps() }}
-                                    <!--<td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"-->
-                                        <!--ng-if="!$last">-->
-                                        <!--{{ timetable.timeFormat(timeGap) }}<br/>{{ timetable.timeFormat(timeGaps[$index + 1]) }}-->
-                                    <!--</td>-->
+                                    <td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
+                                        ng-if="!$last">
+                                        {{ timetable.timeFormat(timeGap) }}<br/>{{ timetable.timeFormat(timeGaps[$index + 1]) }}
+                                    </td>
                                 </tr>
                             </thead>
                             <tbody>
@@ -220,8 +218,8 @@
 
                 <!-- Panel: Feedback -->
 				<div id="feedback" class="tab-pane fade">
-					<iframe src="https://docs.google.com/forms/d/1-1NJ7P15HJjqbomkQGUOYJRnYzuEq68fquaGVeuXnYg/viewform?embedded=true"
-							width="660" height="1150" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+					<!--<iframe src="https://docs.google.com/forms/d/1-1NJ7P15HJjqbomkQGUOYJRnYzuEq68fquaGVeuXnYg/viewform?embedded=true"-->
+							<!--width="660" height="1150" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>-->
                 </div>
 
                 <!-- Panel: Development -->

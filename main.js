@@ -138,11 +138,13 @@ function RemoveEndingComma (input) {
     return input;
 }
 
+var scope;
 
 // Controller
 var app = angular.module(AppName, []);
 app.controller(ControllerName, function($scope) {
 
+    scope = $scope;
     // Variables
     $scope.timetable = new Timetable();
     $scope.newSubject = null;
@@ -377,10 +379,15 @@ function Timetable () {
             while(this.timeGaps.length > 0)
                 this.timeGaps.pop();
 
+            var remainder;
             // Add default time gaps
             for(var i = 800; i <= 1800; i+= this.gap) {
-                if(i % 100 >= 60)
-                    i+= 100 - i; // Round up to nearest hour
+                remainder = i % 100;
+                while (remainder >= 60){
+                    i += 100 - remainder;   // Round up to nearest hour
+                    i += 60 - remainder;    // Add back the remainder
+                    remainder -= 60 - remainder;
+                }
                 this.timeGaps.push(i);
             }
 
@@ -532,6 +539,7 @@ function TimetableDay (timetable, day) {
             timeGaps.push(aClass.startTime);
             timeGaps.push(aClass.endTime);
         });
+        return timeGaps;
     };
 
     this.RemoveClass = function(aClass) {
