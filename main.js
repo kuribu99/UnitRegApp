@@ -313,7 +313,7 @@ function Timetable () {
 
     // Constructor
     this.gap = 60;
-    this.timeFormat = TimeFormat24;
+    this.timeFormat = To24HourFormat;
     this.subjects = [];
     this.timetableDays = [];
     this.timeGaps = [];
@@ -381,13 +381,8 @@ function Timetable () {
 
             var remainder;
             // Add default time gaps
-            for(var i = 800; i <= 1800; i+= this.gap) {
-                remainder = i % 100;
-                while (remainder >= 60){
-                    i += 100 - remainder;   // Round up to nearest hour
-                    i += 60 - remainder;    // Add back the remainder
-                    remainder -= 60 - remainder;
-                }
+            for(var i = 800; i <= 1800;
+                i += parseInt(this.gap / 60) * 100 + this.gap % 60) {
                 this.timeGaps.push(i);
             }
 
@@ -625,6 +620,8 @@ function TimetableDay (timetable, day) {
         if(this.hasChange) {
             this.classSet.ClearClasses();
             this.InitializeClassSet();
+            this.classSet.UpdateSpan();
+            this.hasChange = false;
         }
         return this.classSet
     };
@@ -979,11 +976,33 @@ function ClassSet () {
     this.evenWeekClasses = [];
 
     // Methods
-    this.ClearClasses = function() {
+    this.ClearClasses = function () {
         while(this.oddWeekClasses.length > 0)
             this.oddWeekClasses.pop();
         while(this.evenWeekClasses.length > 0)
             this.evenWeekClasses.pop();
         return this;
     };
+
+    this.UpdateSpan = function () {
+        // Merge
+        this.oddWeekClasses.forEach(function(oddWeekClass) {
+            if(oddWeekClass.colSpan == 1) {
+                var found = false;
+
+                this.evenWeekClasses.forEach(function (evenWeekClass) {
+                    if(oddWeekClass.startTime == evenWeekClass.startTime &&
+                        oddWeekClass.endTime == evenWeekClass.endTime &&
+                        oddWeekClass.timeslot == null || evenWeekClass.timeslot == null)
+                            found = evenWeekClass;
+                }, this);
+
+                if(found) {
+                    oddWeekClass.rowSpan = 2;
+                    var index = this.evenWeekClasses.indexOf(found);
+                    this.evenWeekClasses.splice(index, 1);
+                }
+            }
+        }, this);
+    }
 }

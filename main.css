@@ -20,8 +20,7 @@ table thead {
     text-align: center;
 }
 
-table#timetable thead,
-table#timetable tbody tr td:first-child {
+.td-colored {
     background-color: #efefef;
     cursor: default;
     font-weight: bold;
