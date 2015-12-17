@@ -130,19 +130,26 @@
                                 </button>
                                 <span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
                             </h4>
-                            <div class="col-sm-4" ng-repeat="classtype in subject.timeslots"
-                                 ng-if="classtype.length > 0">
+                            <div class="col-sm-4" ng-repeat="timeslot in subject.timeslots"
+                                 ng-if="timeslots.length > 0">
                                 <h5> {{ ClassType[$index] }}</h5>
                                 <div ng-repeat="timeslot in classtype track by $index">
                                     <label>
                                         <input class="timeslot" type="checkbox"
                                                ng-model="timeslot.Tick"
                                                ng-model-options="{ getterSetter: true }" />
-                                        {{ ClassType[timeslot.classType].charAt(0) }}{{ timeslot.number }}
-                                        ({{ DayInWeek[timeslot.day].substr(0, 3) }},
-                                        {{ To24HourFormat(timeslot.startTime) }}-{{ To24HourFormat(timeslot.endTime) }})
+                                        <span>{{ timeslot.GetTimeslotDetails() }}</span>
+                                        <span>({{ DayInWeek[timeslot.day].substr(0, 3) }},</span>
+                                        <span ng-repeat-start="aClass in timeslot.classes">
+                                            {{ To24HourFormat(aClass.startTime) }}
+                                        </span>
+                                        <span>-</span>
+                                        <span>
+                                            {{ To24HourFormat(aClass.endTime) }})
+                                        </span>
+                                        <br ng-if="!$last" />
+                                        <span ng-repeat-end ></span>
                                     </label>
-                                    <br/>
                                 </div>
                             </div>
                         </div>

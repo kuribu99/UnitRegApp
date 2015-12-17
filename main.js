@@ -238,9 +238,12 @@ app.controller(ControllerName, function($scope) {
             if(timeslot.classes == null) {
                 slot.AddClass('KB520', timeslot.day, BothWeeks, timeslot.startTime, timeslot.endTime);
             }
+
             // Release 2.0 onwards
             else {
-                // TODO: make it tally with new JSON format
+                timeslot.classes.forEach(function (aClass) {
+                    slot.AddClass(aClass.venue, aClass.day, aClass.weekType, aClass.startTime, aClass.endTime);
+                });
             }
         });
         return subject;
@@ -274,7 +277,7 @@ app.controller(ControllerName, function($scope) {
     cookieData.forEach(function(cookie) {
         if(cookie && cookie.length > 0) {
             if(cookie.indexOf('SubjectData:') >= 0) {
-                var subjectJson = cookie.substr(json.indexOf('=') + 1);
+                var subjectJson = cookie.substr(cookie.indexOf('=') + 1);
 
                 // Verify that this cookie is subject data
                 if (subjectJson && subjectJson.length > 0) {
@@ -294,7 +297,6 @@ app.controller(ControllerName, function($scope) {
             }
         }
     });
-
 
     // Variables
     $scope.timetable = new Timetable();
@@ -381,8 +383,8 @@ function Timetable () {
 
             var remainder;
             // Add default time gaps
-            for(var i = 800; i <= 1800;
-                i += parseInt(this.gap / 60) * 100 + this.gap % 60) {
+            for(var i = 800; i <= 1800; i+= this.gap) {
+                if(i % 100 >= 60) i += 100 - (i % 100);
                 this.timeGaps.push(i);
             }
 
@@ -414,7 +416,7 @@ function Timetable () {
 
     this.AddClassesToTimetableDay = function(classes) {
         classes.forEach(function (aClass) {
-            this.timetableDays[aClass.day].push(aClass);
+            this.timetableDays[aClass.day].classes.push(aClass);
         }, this);
     };
 
@@ -539,7 +541,7 @@ function TimetableDay (timetable, day) {
 
     this.RemoveClass = function(aClass) {
         var index = this.classes.indexOf(aClass);
-        this.timeslots.splice(index, 1);
+        this.classes.splice(index, 1);
         return this;
     };
 
@@ -830,8 +832,8 @@ function Timeslot (subject, classType, number) {
     this.ToJSON = function () {
         var json = '{'
             + '"classType":' + this.classType + ','
-            + '"number":' + this.number
-            + '"ticked":' + (this.ticked? 1: 0)
+            + '"number":' + this.number + ','
+            + '"ticked":' + (this.ticked? 1: 0) + ','
             + '"classes":[';
         this.classes.forEach(function (eachClass) {
             json += eachClass.ToJSON() + ',';
