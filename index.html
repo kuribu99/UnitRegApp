@@ -38,7 +38,7 @@
                                     <td class="td-colored"><!-- Empty cell between first row and column --></td>
                                     <td ng-repeat="timeGap in (timeGaps = timetable.GetArrangedTimeGaps()) track by $index"
                                         ng-if="!$last" class="td-colored">
-                                        {{ timetable.timeFormat(timeGap) }}<br/>{{ timetable.timeFormat(timeGaps[$index + 1]) }}
+                                        {{ timetable.ToTimeFormat(timeGap) }}<br/>{{ timetable.ToTimeFormat(timeGaps[$index + 1]) }}
                                     </td>
                                 </tr>
                             </thead>
@@ -68,14 +68,25 @@
                     <div class="col-sm-12 action-panel">
                         <span class="bold">Time Gap</span>
                         <div class="btn-group" data-toggle="buttons">
-                            <label ng-if="timetable.Gap()==30" class="btn btn-default active" ng-click="timetable.Gap(30)">
-                                30 minutes </label>
+                            <label ng-if="timetable.Gap()==30" class="btn btn-default active">
+                                <input type="radio" name="options"> 30 minutes </label>
                             <label ng-if="timetable.Gap()==30" class="btn btn-default" ng-click="timetable.Gap(60)">
                                 <input type="radio" name="options"> 1 hour </label>
                             <label ng-if="timetable.Gap()==60" class="btn btn-default" ng-click="timetable.Gap(30)">
-                                30 minutes </label>
-                            <label ng-if="timetable.Gap()==60" class="btn btn-default active" ng-click="timetable.Gap(60)">
+                                <input type="radio" name="options"> 30 minutes </label>
+                            <label ng-if="timetable.Gap()==60" class="btn btn-default active">
                                 <input type="radio" name="options"> 1 hour </label>
+                        </div>
+                        <span class="bold">Time Format</span>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label ng-if="timetable.TimeFormat()==0" class="btn btn-default active">
+                                <input type="radio" name="options"> 12 Hours </label>
+                            <label ng-if="timetable.TimeFormat()==0" class="btn btn-default" ng-click="timetable.TimeFormat(1)">
+                                <input type="radio" name="options"> 24 Hours </label>
+                            <label ng-if="timetable.TimeFormat()==1" class="btn btn-default" ng-click="timetable.TimeFormat(0)">
+                                <input type="radio" name="options"> 12 Hours </label>
+                            <label ng-if="timetable.TimeFormat()==1" class="btn btn-default active">
+                                <input type="radio" name="options"> 24 Hours </label>
                         </div>
                         <button type="button" class="btn btn-default"
                                 data-toggle="modal"
@@ -131,7 +142,7 @@
                                 <span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
                             </h4>
                             <div class="col-sm-4" ng-repeat="timeslotByClassType in subject.timeslots"
-                                 ng-if="timeslots.length > 0">
+                                 ng-if="timeslotByClassType.length > 0">
                                 <h5> {{ ClassType[$index] }}</h5>
                                 <div ng-repeat="timeslot in timeslotByClassType track by $index">
                                     <label>
@@ -139,16 +150,14 @@
                                                ng-model="timeslot.Tick"
                                                ng-model-options="{ getterSetter: true }" />
                                         <span>{{ timeslot.GetTimeslotDetails() }}</span>
-                                        <span>({{ DayInWeek[timeslot.day].substr(0, 3) }},</span>
                                         <span ng-repeat-start="aClass in timeslot.classes">
-                                            {{ To24HourFormat(aClass.startTime) }}
+                                            ({{ DayInWeek[aClass.day].substr(0, 3) }}
+                                            {{ timetable.ToTimeFormat(aClass.startTime) }}
+                                            -
+                                            {{ timetable.ToTimeFormat(aClass.endTime) }})
+                                            <br ng-if="!$last" />
                                         </span>
-                                        <span>-</span>
-                                        <span>
-                                            {{ To24HourFormat(aClass.endTime) }})
-                                        </span>
-                                        <br ng-if="!$last" />
-                                        <span ng-repeat-end ></span>
+                                        <span ng-repeat-end></span>
                                     </label>
                                 </div>
                             </div>

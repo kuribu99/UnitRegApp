@@ -82,12 +82,12 @@ function To24HourFormat (time) {
  * @return {string}
  */
 function To12HourFormat (time) {
-    var hour = time % 100;
-    var min = parseInt(time / 100);
+    var min = time % 100;
+    var hour = parseInt(time / 100);
     var type = 'AM';
 
     // Check for AM/PM
-    if(hour >= 1200 && time < 2400) {
+    if(time >= 1200 && time < 2400) {
         hour -= 12;
         type = 'PM';
     }
@@ -146,12 +146,11 @@ app.controller(ControllerName, function($scope) {
 
     scope = $scope;
     // Variables
+    $scope.DayInWeek = DayInWeek;
+    $scope.ClassType = ClassType;
     $scope.timetable = new Timetable();
     $scope.newSubject = null;
     $scope.editSubject = null;
-
-    // Methods
-    $scope.ToTimeFormat = To24HourFormat;
 
     // UI Methods
     $scope.Zoom = function (zoom) {
@@ -272,11 +271,16 @@ app.controller(ControllerName, function($scope) {
         }
     };
 
+    // Variables
+    $scope.timetable = new Timetable();
+    $scope.newSubject = $scope.CreateNewSubject();
+    $scope.editSubject = $scope.newSubject;
+
     // Read from cookie
     var cookieData = document.cookie.split(';');
     cookieData.forEach(function(cookie) {
         if(cookie && cookie.length > 0) {
-            if(cookie.indexOf('SubjectData:') >= 0) {
+            if(cookie.indexOf('SubjectData') >= 0) {
                 var subjectJson = cookie.substr(cookie.indexOf('=') + 1);
 
                 // Verify that this cookie is subject data
@@ -284,27 +288,21 @@ app.controller(ControllerName, function($scope) {
                     try {
                         $scope.timetable.AddSubject($scope.ParseSubject(JSON.parse(subjectJson)));
                     }
-                    catch(e) {}
+                    catch(e) {
+                        console.log(e);
+                    }
                 }
             }
-            else if (cookie.indexOf('TimeGap=') >= 0) {
+            else if (cookie.indexOf('TimeGap') >= 0) {
                 var gap = cookie.substr(cookie.indexOf('=') + 1);
                 $scope.timetable.Gap(parseInt(gap));
             }
-            else if (json.indexOf('TimeFormat=') >= 0) {
+            else if (cookie.indexOf('TimeFormat') >= 0) {
                 var timeFormat = cookie.substr(cookie.indexOf('=') + 1);
                 $scope.timetable.TimeFormat(parseInt(timeFormat));
             }
         }
     });
-
-    // Variables
-    $scope.timetable = new Timetable();
-    $scope.newSubject = $scope.CreateNewSubject();
-    $scope.editSubject = $scope.newSubject;
-
-    // Methods
-    $scope.ToTimeFormat = To24HourFormat;
 
     // Update the changes
     $scope.NotifyChanges();
@@ -315,7 +313,8 @@ function Timetable () {
 
     // Constructor
     this.gap = 60;
-    this.timeFormat = To24HourFormat;
+    this.timeFormat = TimeFormat12;
+    this.ToTimeFormat = To12HourFormat;
     this.subjects = [];
     this.timetableDays = [];
     this.timeGaps = [];
@@ -355,6 +354,9 @@ function Timetable () {
         }
     };
 
+    /**
+     * @return {number}
+     */
     this.TimeFormat = function (timeFormat) {
         if(arguments.length == 0) {
             return this.timeFormat;
@@ -362,10 +364,12 @@ function Timetable () {
             if(this.timeFormat != timeFormat) {
                 this.timeFormat = timeFormat;
 
+                this.ToTimeFormat = this.timeFormat == TimeFormat12? To12HourFormat: To24HourFormat;
+
                 var expireDate = new Date();
                 expireDate.setTime(expireDate.getTime() + CookieTimeout);
 
-                document.cookie = 'TimeFormat=' + this.TimeFormat + ';'
+                document.cookie = 'TimeFormat=' + this.timeFormat + ';'
                     +  'expires=' + expireDate.toUTCString();
 
                 this.NotifyChanges();
@@ -518,7 +522,7 @@ function TimetableDay (timetable, day) {
     };
 
     this.HasClash = function(aClass) {
-        this.timeslots.forEach(function (otherClass) {
+        this.classes.forEach(function (otherClass) {
             var sameSubject = aClass.timeslot.subject == otherClass.timeslot.subject;
             var differentClassType = aClass.classType != otherClass.classType;
             var hasClash = aClass.ClashWith(otherClass) || otherClass.ClashWith(aClass);
