@@ -130,10 +130,10 @@
                                 </button>
                                 <span>{{ subject.subjectCode }} {{ subject.subjectName}}</span>
                             </h4>
-                            <div class="col-sm-4" ng-repeat="timeslot in subject.timeslots"
+                            <div class="col-sm-4" ng-repeat="timeslotByClassType in subject.timeslots"
                                  ng-if="timeslots.length > 0">
                                 <h5> {{ ClassType[$index] }}</h5>
-                                <div ng-repeat="timeslot in classtype track by $index">
+                                <div ng-repeat="timeslot in timeslotByClassType track by $index">
                                     <label>
                                         <input class="timeslot" type="checkbox"
                                                ng-model="timeslot.Tick"

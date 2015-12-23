@@ -381,7 +381,6 @@ function Timetable () {
             while(this.timeGaps.length > 0)
                 this.timeGaps.pop();
 
-            var remainder;
             // Add default time gaps
             for(var i = 800; i <= 1800; i+= this.gap) {
                 if(i % 100 >= 60) i += 100 - (i % 100);
@@ -562,7 +561,7 @@ function TimetableDay (timetable, day) {
         var hasTwoWeekClasses = false;
 
         this.classes.forEach(function (aClass) {
-            hasTwoWeekClasses |= !(aClass.weekType == BothWeeks);
+            hasTwoWeekClasses |= aClass.ticked && aClass.weekType != BothWeeks ;
         });
 
         return hasTwoWeekClasses;
@@ -583,7 +582,7 @@ function TimetableDay (timetable, day) {
             i++;
 
             if (tickedClass && tickedClass.weekType != EvenWeekOnly) {
-                if (tickedClass.weekType == BothWeeks)
+                if (tickedClass.weekType == BothWeeks || !this.HasTwoWeekClasses())
                     rowSpan = 2;
 
                 while (tickedClass.endTime - timeGaps[i] > 0) {
@@ -591,28 +590,33 @@ function TimetableDay (timetable, day) {
                     i++;
                 }
             }
+            else
+                tickedClass = null;
 
             this.classSet.oddWeekClasses.push(new TimeGap(tickedClass, colSpan, rowSpan));
         }
 
-        // Get data for even week
-        i = 0;
-        rowSpan = 1;
-        while(i < timeGaps.length - 1) {
-            colSpan = 1;
-            tickedClass = this.GetTickedClassByStartTime(timeGaps[i]);
-            i++;
+        // Get data for even week only if has both week's classes
+        if(this.HasTwoWeekClasses()) {
+            i = 0;
+            rowSpan = 1;
+            while (i < timeGaps.length - 1) {
+                colSpan = 1;
+                tickedClass = this.GetTickedClassByStartTime(timeGaps[i]);
+                i++;
 
-            if (tickedClass && tickedClass.weekType == EvenWeekOnly) {
+                if (tickedClass && tickedClass.weekType == EvenWeekOnly) {
 
-                while (tickedClass.endTime - timeGaps[i] > 0) {
-                    colSpan++;
-                    i++;
+                    while (tickedClass.endTime - timeGaps[i] > 0) {
+                        colSpan++;
+                        i++;
+                    }
                 }
+                else
+                    tickedClass = null;
 
+                this.classSet.evenWeekClasses.push(new TimeGap(tickedClass, colSpan, rowSpan));
             }
-
-            this.classSet.evenWeekClasses.push(new TimeGap(tickedClass, colSpan, rowSpan));
         }
 
         return this;
@@ -987,24 +991,28 @@ function ClassSet () {
     };
 
     this.UpdateSpan = function () {
-        // Merge
-        this.oddWeekClasses.forEach(function(oddWeekClass) {
+        for(var i = 0;i < this.oddWeekClasses.length; i++) {
+            var oddWeekClass = this.oddWeekClasses[i];
+
             if(oddWeekClass.colSpan == 1) {
-                var found = false;
 
-                this.evenWeekClasses.forEach(function (evenWeekClass) {
-                    if(oddWeekClass.startTime == evenWeekClass.startTime &&
-                        oddWeekClass.endTime == evenWeekClass.endTime &&
-                        oddWeekClass.timeslot == null || evenWeekClass.timeslot == null)
-                            found = evenWeekClass;
-                }, this);
+                for(var j = 0;j < this.evenWeekClasses.length; j++) {
+                    var evenWeekClass = this.evenWeekClasses[j];
 
-                if(found) {
-                    oddWeekClass.rowSpan = 2;
-                    var index = this.evenWeekClasses.indexOf(found);
-                    this.evenWeekClasses.splice(index, 1);
+                    if(evenWeekClass.timeslot == null && oddWeekClass.startTime == evenWeekClass.startTime) {
+                        var length = 1;
+                        for(var k = j;
+                            k < this.evenWeekClasses.length &&
+                                this.evenWeekClasses[k].endTime < oddWeekClass.endTime &&
+                                this.evenWeekClasses[k].timeslot == null;
+                            k++)
+                            length++;
+
+                        oddWeekClass.rowSpan = 2;
+                        this.evenWeekClasses.splice(j, length);
+                    }
                 }
             }
-        }, this);
+        }
     }
 }
