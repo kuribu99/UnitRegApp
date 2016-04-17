@@ -674,6 +674,7 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
             if(tick) {
                 try {
                     this.subject.Tick(this);
+                    this.subject.timetable.AddSubjectToCookie(this.subject);
                 }
                 catch (timeslot) {
                     alert('Unable to tick this timeslot. Has clashes with:\n'
@@ -684,6 +685,7 @@ function Timeslot(day, startTime, endTime, subject, classType, number) {
             else {
                 this.ticked = false;
                 this.subject.timetable.NotifyChanges();
+                this.subject.timetable.AddSubjectToCookie(this.subject);
             }
         }
     };
